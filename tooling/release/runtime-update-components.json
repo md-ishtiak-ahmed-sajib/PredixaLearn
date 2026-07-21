@@ -1,3 +1,4 @@
 {
+  "comment": "Signed maintenance-channel health bootstrap only. No runtime components are approved for distribution in this release.",
   "components": []
 }

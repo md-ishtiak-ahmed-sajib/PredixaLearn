@@ -21,7 +21,22 @@ The browser must be online to open the control. An update is never required mere
 3. Add the complete private PEM as the GitHub Actions repository secret named `PREDIXALEARN_UPDATE_SIGNING_KEY`.
 4. Rotate the key by shipping an application release containing the next public key before signing releases with it.
 
-Until that public key is installed and a signed Release exists, the maintenance dialog deliberately reports that the channel is unavailable. This is the expected first-launch behavior.
+Until that public key is installed and a signed Release exists, the maintenance dialog deliberately reports that the channel is unavailable. The first signed release can safely be a no-update bootstrap: it proves the installed public key and public channel work without offering any runtime component.
+
+## Signed channel-health bootstrap
+
+For the first public channel release, configure these non-sensitive **Actions variables**:
+
+| Variable | Value |
+| --- | --- |
+| `PREDIXALEARN_MAINTENANCE_RELEASE_TAG` | `v1.1.0` |
+| `PREDIXALEARN_MINIMUM_APP_VERSION` | `1.1.0` |
+| `PREDIXALEARN_COMPONENTS_FILE` | `tooling/release/runtime-update-components.json` |
+| `PREDIXALEARN_MANIFEST_EXPIRY_DAYS` | `30` |
+
+Keep `PREDIXALEARN_UPDATE_SIGNING_KEY` as an **Actions secret**, never an Actions variable. The release workflow refuses to sign if that private PEM does not derive the committed `predixalearn-update-public.pem` key. Dispatching the workflow with these defaults creates or updates a published `v1.1.0` Release, uploads the detached manifest signature, downloads both assets again, and verifies them against the committed public key.
+
+`runtime-update-components.json` is intentionally empty for this bootstrap. It makes the local Maintenance dialog report an available signed channel with no approved runtime updates; it does not authorize any download or runtime change.
 
 ## Preparing a runtime release
 
