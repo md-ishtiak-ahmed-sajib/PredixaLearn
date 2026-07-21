@@ -1,14 +1,21 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
+async function openMaintenanceMenu(page) {
+  const menu = page.locator(".nav-group-more");
+  if (!await menu.evaluate((element) => element.open)) {
+    await page.locator("#more-menu-toggle").click();
+  }
+}
+
 test("Home is task-first, keyboard-accessible, and has no severe axe findings", async ({ page }) => {
   test.slow();
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Turn past-paper scans into trustworthy knowledge." })).toBeVisible();
-  await expect(page.getByRole("tab", { name: "Exam Paper Recommended Questions, marks, tables, figures, and source-linked review" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Turn exam papers into trusted learning evidence." })).toBeVisible();
+  await expect(page.getByRole("radio", { name: /Exam Paper Recommended/ })).toBeChecked();
   await expect(page.getByRole("button", { name: "Run Judge Demo" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Convert document" })).toBeDisabled();
-  await page.getByRole("tab", { name: "Advanced Choose specialist OCR strategies for English documents" }).click();
+  await page.getByRole("radio", { name: /Advanced Choose specialist OCR strategies/ }).check();
   await expect(page.getByText("OCR language English")).toBeVisible();
   await expect(page.locator("#ocr-language")).toHaveValue("en");
   await page.getByRole("tab", { name: "Vision-Language Advanced understanding for unusually complex English pages" }).click();
@@ -18,15 +25,72 @@ test("Home is task-first, keyboard-accessible, and has no severe axe findings", 
   expect(severe).toEqual([]);
 });
 
-test("Home, Tips, and History do not overflow at a phone width", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  for (const route of ["/", "/tips", "/history", "/analyze", "/benchmark", "/review", "/teacher", "/revision"]) {
-    await page.goto(route);
-    const widths = await page.locator("html").evaluate((element) => ({
-      clientWidth: element.clientWidth,
-      scrollWidth: element.scrollWidth,
-    }));
+test("Responsive navigation is usable, keyboard-operable, and does not create horizontal overflow", async ({ page }) => {
+  for (const viewport of [{ width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1024, height: 768 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/review");
+    const toggle = page.locator("#nav-toggle");
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toHaveAccessibleName("Open navigation");
+    await expect(toggle).toHaveCSS("min-height", "44px");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await expect(page.locator("#primary-nav")).toBeVisible();
+    await expect(page.locator("#primary-nav [aria-current='page']")).toHaveText("Review");
+    await page.keyboard.press("Escape");
+    await expect(page.locator("#primary-nav")).toBeHidden();
+    const widths = await page.locator("html").evaluate((element) => ({ clientWidth: element.clientWidth, scrollWidth: element.scrollWidth }));
     expect(widths.scrollWidth).toBe(widths.clientWidth);
+  }
+});
+
+test("Every workspace fits at phone and tablet widths with a single-column conversion flow", async ({ page }) => {
+  for (const viewport of [{ width: 390, height: 844 }, { width: 768, height: 1024 }]) {
+    await page.setViewportSize(viewport);
+    for (const route of ["/", "/tips", "/history", "/analyze", "/benchmark", "/review", "/teacher", "/revision"]) {
+      await page.goto(route);
+      const widths = await page.locator("html").evaluate((element) => ({ clientWidth: element.clientWidth, scrollWidth: element.scrollWidth }));
+      expect(widths.scrollWidth).toBe(widths.clientWidth);
+    }
+    await page.goto("/");
+    await expect(page.getByRole("button", { name: "Run Judge Demo" })).toBeVisible();
+    const flow = await page.locator(".workspace").evaluate((element) => {
+      const [workflow, result] = Array.from(element.children).map((child) => child.getBoundingClientRect());
+      return { resultBelowWorkflow: result.top >= workflow.bottom - 1 };
+    });
+    expect(flow.resultBelowWorkflow).toBe(true);
+  }
+});
+
+test("Primary layouts share their page heading boundaries on desktop, tablet, and phone", async ({ page }) => {
+  const routes = [
+    ["/", [".compact-home-hero", ".workspace"]],
+    ["/analyze", [".page-hero", ".analysis-shell"]],
+    ["/review", [".page-hero", ".review-control", ".review-lower-grid"]],
+    ["/history", [".page-hero", ".institution-sync-panel", ".history-panel"]],
+    ["/teacher", [".page-hero", ".dashboard-heading", ".teacher-grid", "[aria-labelledby='teacher-audit-title']"]],
+    ["/revision", [".page-hero", ".revision-layout"]],
+    ["/benchmark", [".page-hero", ".benchmark-grid"]],
+    ["/tips", [".page-hero", ".tips-layout"]],
+  ];
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 768, height: 1024 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    for (const [route, selectors] of routes) {
+      await page.goto(route);
+      const bounds = await page.locator("main").evaluate((main, targets) => {
+        const frame = main.getBoundingClientRect();
+        return targets.map((selector) => {
+          const element = document.querySelector(selector);
+          if (!element) return null;
+          const rect = element.getBoundingClientRect();
+          return { left: Math.round(rect.left - frame.left), right: Math.round(frame.right - rect.right) };
+        });
+      }, selectors);
+      for (const [index, boundary] of bounds.entries()) {
+        expect(boundary).not.toBeNull();
+        expect(Math.abs(boundary.left - boundary.right), `${viewport.width}px ${route} ${selectors[index]} ${JSON.stringify(boundary)}`).toBeLessThanOrEqual(1);
+      }
+    }
   }
 });
 
@@ -181,6 +245,7 @@ test("Maintenance dialog reviews signed channel results before enabling apply", 
     });
   });
   await page.goto("/");
+  await openMaintenanceMenu(page);
   await page.getByRole("button", { name: "Maintenance" }).click();
   await expect(page.getByRole("dialog", { name: "Runtime maintenance" })).toBeVisible();
   await expect(page.getByText("Maintenance in progress: We are updating our systems and appreciate your patience.")).toBeVisible();
@@ -213,6 +278,7 @@ test("Maintenance check shows indeterminate progress until the signed response a
   });
 
   await page.goto("/");
+  await openMaintenanceMenu(page);
   await page.getByRole("button", { name: "Maintenance" }).click();
   await expect(page.locator("#maintenance-progress")).toBeVisible();
   await expect(page.locator("#maintenance-progress")).toHaveAttribute("aria-busy", "true");
@@ -270,6 +336,7 @@ test("Maintenance apply updates live progress and preserves restart-required sta
   });
 
   await page.goto("/");
+  await openMaintenanceMenu(page);
   await page.getByRole("button", { name: "Maintenance" }).click();
   await expect(page.getByRole("button", { name: "Apply reviewed updates" })).toBeEnabled();
   await page.getByRole("button", { name: "Apply reviewed updates" }).click();
@@ -284,6 +351,7 @@ test("Maintenance apply updates live progress and preserves restart-required sta
 
 test("Maintenance is unavailable when the browser goes offline", async ({ page }) => {
   await page.goto("/");
+  await openMaintenanceMenu(page);
   const maintenance = page.getByRole("button", { name: "Maintenance" });
   await expect(maintenance).toBeEnabled();
   await page.context().setOffline(true);

@@ -9,9 +9,9 @@
 {% block main %}
   <section class="hero compact-home-hero">
     <div>
-      <p class="eyebrow">Private, local exam-paper intelligence</p>
-      <h1>Turn past-paper scans <em>into trustworthy knowledge.</em></h1>
-      <p>Reconstruct questions, tables, equations, figures, and source evidence before you analyze or export them.</p>
+      <p class="eyebrow">Local exam-paper workspace</p>
+      <h1>Turn exam papers into <em>trusted learning evidence.</em></h1>
+      <p>Upload an English past paper to recover questions, marks, tables, and page-linked evidence for teacher review, analysis, and export.</p>
     </div>
       <div class="privacy-promise"><span aria-hidden="true"></span>OCR stays on this computer</div>
   </section>
@@ -19,14 +19,27 @@
   <section class="workspace" aria-labelledby="workspace-title">
     <div class="workflow-panel">
       <div class="panel-kicker"><span>01</span><span>Convert an exam paper</span></div>
-      <h2 id="workspace-title">Choose your document, then add the scan.</h2>
-      <p class="panel-intro">Exam Paper is designed to preserve question numbers, marks, source evidence, and review warnings.</p>
+      <h2 id="workspace-title">Choose a purpose, then add your scan.</h2>
+      <p class="panel-intro">Exam Paper preserves question numbers, marks, source evidence, and review warnings for teacher review.</p>
 
-      <div class="intent-tabs" role="tablist" aria-label="Document intent">
-        <button class="intent-tab active recommended" type="button" role="tab" aria-selected="true" data-intent="exam"><span>Exam Paper <b>Recommended</b></span><small>Questions, marks, tables, figures, and source-linked review</small></button>
-        <button class="intent-tab" type="button" role="tab" aria-selected="false" data-intent="general"><span>General Document</span><small>Local structured conversion for reports and study notes</small></button>
-        <button class="intent-tab" type="button" role="tab" aria-selected="false" data-intent="advanced"><span>Advanced</span><small>Choose specialist OCR strategies for English documents</small></button>
-      </div>
+      <fieldset class="intent-options">
+        <legend>What are you converting?</legend>
+        <div class="intent-tabs" aria-describedby="intent-help">
+          <label class="intent-option recommended">
+            <input type="radio" name="document-intent" value="exam" checked>
+            <span><strong>Exam Paper <b>Recommended</b></strong><small>Questions, marks, tables, figures, and source-linked review</small></span>
+          </label>
+          <label class="intent-option">
+            <input type="radio" name="document-intent" value="general">
+            <span><strong>General Document</strong><small>Local structured conversion for reports and study notes</small></span>
+          </label>
+          <label class="intent-option">
+            <input type="radio" name="document-intent" value="advanced">
+            <span><strong>Advanced</strong><small>Choose specialist OCR strategies for English documents</small></span>
+          </label>
+        </div>
+        <small id="intent-help" class="field-help">Choose Advanced only when you need specialist OCR controls.</small>
+      </fieldset>
 
       <div id="workflow-mode-tabs" class="workflow-tabs" role="tablist" aria-label="Advanced OCR mode">
         <button class="workflow-tab active recommended" type="button" role="tab" aria-selected="true" data-mode="document" aria-controls="document-options">
@@ -133,9 +146,17 @@
         <div class="activity"><strong>Detailed activity</strong><ol id="activity-log" class="activity-log"></ol></div>
       </section>
 
-      <div id="empty-result" class="empty-result">
+      <div id="empty-result" class="empty-result outcome-panel">
         <span class="empty-result-mark" aria-hidden="true">✦</span>
-        <div><strong>Your structured output will appear here.</strong><p>Preview readable content, review warnings, and download the formats you need.</p></div>
+        <div>
+          <strong>What you’ll get</strong>
+          <p>One local conversion creates evidence you can inspect, improve, and reuse.</p>
+          <ol class="outcome-list">
+            <li><span>1</span><div><b>Readable reconstruction</b><small>Questions, tables, and figures in one reviewable output.</small></div></li>
+            <li><span>2</span><div><b>Source evidence</b><small>Warnings and page evidence stay connected to the result.</small></div></li>
+            <li><span>3</span><div><b>Portable exports</b><small>Download Markdown, JSON, or DOCX when processing is complete.</small></div></li>
+          </ol>
+        </div>
       </div>
 
       <section id="result-view" class="result-view hidden" aria-labelledby="result-title">

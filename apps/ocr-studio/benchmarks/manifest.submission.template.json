@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "metadata": {
+    "dataset_name": "REQUIRED: permission-cleared challenge set name",
+    "license_or_permission": "REQUIRED: document the right to process and publish every case",
+    "hardware": "REQUIRED: CPU, GPU, RAM, OS, driver, and storage details",
+    "software": "REQUIRED: PredixaLearn commit, Python, PaddleOCR, model, and LibreOffice versions",
+    "ground_truth_method": "REQUIRED: manual transcription and second-review method",
+    "limitations": "REQUIRED: known dataset, hardware, and processing limitations"
+  },
+  "cases": [
+    {"case_id": "replace-01-plain-text", "category": "plain text", "expected_evidence": "ground-truth/replace-01-plain-text.json", "text": "", "question_numbers": [], "reading_order": [], "features": {"tables": 0, "figures": 0, "equations": 0}},
+    {"case_id": "replace-02-two-column", "category": "two-column text", "expected_evidence": "ground-truth/replace-02-two-column.json", "text": "", "question_numbers": [], "reading_order": [], "features": {"tables": 0, "figures": 0, "equations": 0}},
+    {"case_id": "replace-03-curved-camera", "category": "curved camera scan", "expected_evidence": "ground-truth/replace-03-curved-camera.json", "text": "", "question_numbers": [], "reading_order": [], "features": {"tables": 0, "figures": 0, "equations": 0}},
+    {"case_id": "replace-04-rotated", "category": "rotated page", "expected_evidence": "ground-truth/replace-04-rotated.json", "text": "", "question_numbers": [], "reading_order": [], "features": {"tables": 0, "figures": 0, "equations": 0}},
+    {"case_id": "replace-05-equation", "category": "equation-heavy page", "expected_evidence": "ground-truth/replace-05-equation.json", "text": "", "question_numbers": [], "reading_order": [], "features": {"tables": 0, "figures": 0, "equations": 0}},
+    {"case_id": "replace-06-table", "category": "table-heavy page", "expected_evidence": "ground-truth/replace-06-table.json", "text": "", "question_numbers": [], "reading_order": [], "features": {"tables": 0, "figures": 0, "equations": 0}},
+    {"case_id": "replace-07-figure", "category": "figure-heavy page", "expected_evidence": "ground-truth/replace-07-figure.json", "text": "", "question_numbers": [], "reading_order": [], "features": {"tables": 0, "figures": 0, "equations": 0}},
+    {"case_id": "replace-08-low-resolution", "category": "low-resolution scan", "expected_evidence": "ground-truth/replace-08-low-resolution.json", "text": "", "question_numbers": [], "reading_order": [], "features": {"tables": 0, "figures": 0, "equations": 0}},
+    {"case_id": "replace-09-watermarked", "category": "watermarked scan", "expected_evidence": "ground-truth/replace-09-watermarked.json", "text": "", "question_numbers": [], "reading_order": [], "features": {"tables": 0, "figures": 0, "equations": 0}},
+    {"case_id": "replace-10-mixed-layout", "category": "mixed text, table, and figure", "expected_evidence": "ground-truth/replace-10-mixed-layout.json", "text": "", "question_numbers": [], "reading_order": [], "features": {"tables": 0, "figures": 0, "equations": 0}},
+    {"case_id": "replace-11-hierarchical", "category": "nested question hierarchy", "expected_evidence": "ground-truth/replace-11-hierarchical.json", "text": "", "question_numbers": [], "reading_order": [], "features": {"tables": 0, "figures": 0, "equations": 0}},
+    {"case_id": "replace-12-faint-text", "category": "faint or uneven illumination", "expected_evidence": "ground-truth/replace-12-faint-text.json", "text": "", "question_numbers": [], "reading_order": [], "features": {"tables": 0, "figures": 0, "equations": 0}},
+    {"case_id": "replace-13-dense-formulas", "category": "dense formulas and symbols", "expected_evidence": "ground-truth/replace-13-dense-formulas.json", "text": "", "question_numbers": [], "reading_order": [], "features": {"tables": 0, "figures": 0, "equations": 0}},
+    {"case_id": "replace-14-multi-page", "category": "multi-page reading order", "expected_evidence": "ground-truth/replace-14-multi-page.json", "text": "", "question_numbers": [], "reading_order": [], "features": {"tables": 0, "figures": 0, "equations": 0}},
+    {"case_id": "replace-15-complex-mix", "category": "complex mixed exam page", "expected_evidence": "ground-truth/replace-15-complex-mix.json", "text": "", "question_numbers": [], "reading_order": [], "features": {"tables": 0, "figures": 0, "equations": 0}}
+  ]
+}

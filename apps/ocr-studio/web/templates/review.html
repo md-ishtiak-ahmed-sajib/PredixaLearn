@@ -10,32 +10,30 @@
 </section>
 
 <section class="review-control glass-card" aria-labelledby="review-control-title">
-  <div><p class="panel-kicker"><span>01</span><span>Select evidence</span></p><h2 id="review-control-title">Completed paper</h2></div>
-  <label for="review-history">History record <select id="review-history"><option value="">Choose a completed OCR run</option></select></label>
-  <fieldset class="review-filters"><legend>Confidence overlay</legend>
-    <label><input type="checkbox" data-band="high" checked> High</label>
-    <label><input type="checkbox" data-band="review" checked> Review</label>
-    <label><input type="checkbox" data-band="low" checked> Low</label>
-    <label><input type="checkbox" data-band="unavailable" checked> Unavailable</label>
-  </fieldset>
-  <fieldset class="review-filters"><legend>Evidence type</legend>
-    <label><input type="checkbox" data-evidence-type="text" checked> Text</label>
-    <label><input type="checkbox" data-evidence-type="question" checked> Questions</label>
-    <label><input type="checkbox" data-evidence-type="marks" checked> Marks</label>
-    <label><input type="checkbox" data-evidence-type="table" checked> Tables</label>
-    <label><input type="checkbox" data-evidence-type="figure" checked> Figures</label>
-    <label><input type="checkbox" data-evidence-type="unmapped" checked> Unmapped</label>
-  </fieldset>
+  <div class="review-control-heading"><p class="panel-kicker"><span>01</span><span>Select evidence</span></p><h2 id="review-control-title">Completed paper</h2><p>Choose a saved conversion, then focus the source evidence you need to review.</p></div>
+  <div class="review-primary-field"><label for="review-history">History record <select id="review-history"><option value="">Choose a completed OCR run</option></select></label></div>
+  <div class="review-filter-panel" aria-label="Evidence filters">
+    <fieldset class="review-filters"><legend>Confidence overlay</legend>
+      <label><input type="checkbox" data-band="high" checked> High</label>
+      <label><input type="checkbox" data-band="review" checked> Review</label>
+      <label><input type="checkbox" data-band="low" checked> Low</label>
+      <label><input type="checkbox" data-band="unavailable" checked> Unavailable</label>
+    </fieldset>
+    <fieldset class="review-filters"><legend>Evidence type</legend>
+      <label><input type="checkbox" data-evidence-type="text" checked> Text</label>
+      <label><input type="checkbox" data-evidence-type="question" checked> Questions</label>
+      <label><input type="checkbox" data-evidence-type="marks" checked> Marks</label>
+      <label><input type="checkbox" data-evidence-type="table" checked> Tables</label>
+      <label><input type="checkbox" data-evidence-type="figure" checked> Figures</label>
+      <label><input type="checkbox" data-evidence-type="unmapped" checked> Unmapped</label>
+    </fieldset>
+  </div>
   <div class="review-toolbar" aria-label="Review navigation">
-    <button id="review-prev" class="quiet-button" type="button">Previous page</button>
-    <span id="review-page-label">Page 0 of 0</span>
-    <button id="review-next" class="quiet-button" type="button">Next page</button>
+    <div class="review-page-navigation"><button id="review-prev" class="quiet-button" type="button">Previous page</button><span id="review-page-label">Page 0 of 0</span><button id="review-next" class="quiet-button" type="button">Next page</button></div>
     <label for="review-source-mode">Source mode <select id="review-source-mode"><option value="page">Full page</option><option value="question">Question crop</option></select></label>
     <label for="review-question">Question <select id="review-question"><option value="">Choose a question</option></select></label>
     <label for="review-zoom">Zoom <input id="review-zoom" type="range" min="75" max="200" step="25" value="100"><output id="review-zoom-output">100%</output></label>
-    <a id="review-download-markdown" class="quiet-button hidden" href="#">Effective Markdown</a>
-    <a id="review-download-json" class="quiet-button hidden" href="#">Effective JSON</a>
-    <a id="review-download-docx" class="quiet-button hidden" href="#">Effective DOCX</a>
+    <div class="review-exports"><a id="review-download-markdown" class="quiet-button hidden" href="#">Effective Markdown</a><a id="review-download-json" class="quiet-button hidden" href="#">Effective JSON</a><a id="review-download-docx" class="quiet-button hidden" href="#">Effective DOCX</a></div>
   </div>
   <p id="review-status" class="analysis-status" role="status" aria-live="polite">Choose a paper to load its immutable OCR evidence.</p>
 </section>
