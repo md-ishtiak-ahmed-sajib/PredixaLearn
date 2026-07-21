@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-migrate-{{ .Release.Revision }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels: {app: {{ .Release.Name }}, component: migration}
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext: {runAsNonRoot: true, seccompProfile: {type: RuntimeDefault}}
+      containers:
+        - name: migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["alembic", "upgrade", "head"]
+          env:
+            - {name: PREDIXALEARN_INSTITUTION_ENV, value: production}
+            - {name: PREDIXALEARN_PUBLIC_BASE_URL, value: {{ .Values.config.publicBaseUrl | quote }}}
+            - {name: PREDIXALEARN_AUTH_MODE, value: oidc}
+            - {name: PREDIXALEARN_OIDC_ISSUER, value: {{ .Values.config.oidcIssuer | quote }}}
+            - {name: PREDIXALEARN_OIDC_AUDIENCE, value: {{ .Values.config.oidcAudience | quote }}}
+            - {name: PREDIXALEARN_OIDC_JWKS_URL, value: {{ .Values.config.oidcJwksUrl | quote }}}
+            - {name: PREDIXALEARN_OIDC_AUTHORIZATION_ENDPOINT, value: {{ .Values.config.oidcAuthorizationEndpoint | quote }}}
+            - {name: PREDIXALEARN_OIDC_TOKEN_ENDPOINT, value: {{ .Values.config.oidcTokenEndpoint | quote }}}
+            - {name: PREDIXALEARN_STORAGE_PROVIDER, value: {{ .Values.config.storageProvider | quote }}}
+            - {name: PREDIXALEARN_S3_BUCKET, value: {{ .Values.config.s3Bucket | quote }}}
+            - {name: PREDIXALEARN_FEATURES, value: {{ .Values.config.features | quote }}}
+          envFrom: [{secretRef: {name: {{ .Values.existingSecret }}}}]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ["ALL"]}
+          volumeMounts: [{name: temp, mountPath: /tmp}]
+      volumes: [{name: temp, emptyDir: {}}]

@@ -1,0 +1,31 @@
+image:
+  repository: ghcr.io/md-ishtiak-ahmed-sajib/predixalearn-institution
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+replicas: 2
+service:
+  port: 8100
+ingress:
+  enabled: false
+  className: nginx
+  host: predixalearn.example.edu
+  tlsSecretName: predixalearn-tls
+existingSecret: predixalearn-institution-secrets
+config:
+  publicBaseUrl: https://predixalearn.example.edu
+  oidcIssuer: https://idp.example.edu
+  oidcAudience: predixalearn-api
+  oidcJwksUrl: https://idp.example.edu/.well-known/jwks.json
+  oidcAuthorizationEndpoint: https://idp.example.edu/oauth2/authorize
+  oidcTokenEndpoint: https://idp.example.edu/oauth2/token
+  storageProvider: s3
+  s3Bucket: predixalearn
+  semanticSearch: "false"
+  externalAi: "false"
+  features: archive_review,curriculum,answer_scripts,accessibility,datasets,workers,integrations,lti
+resources:
+  requests: {cpu: 250m, memory: 512Mi}
+  limits: {cpu: "2", memory: 2Gi}
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

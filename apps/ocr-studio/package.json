@@ -1,0 +1,27 @@
+{
+  "name": "@predixalearn/ocr-studio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "vendor": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/vendor_web_assets.ps1",
+    "typecheck": "tsc --noEmit",
+    "verify:assets": "node scripts/verify_web_assets.mjs",
+    "test:ui": "playwright test"
+  },
+  "dependencies": {
+    "@fontsource-variable/manrope": "5.3.0",
+    "dompurify": "3.4.12",
+    "marked": "18.0.6",
+    "pdfjs-dist": "6.1.200",
+    "swagger-ui-dist": "5.32.9"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
+    "@playwright/test": "1.61.1",
+    "typescript": "7.0.2"
+  }
+}

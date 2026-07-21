@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block scripts %}
+  <script src="/static/analysis.js?v={{ asset_versions.get('analysis.js', '1') }}" type="module"></script>
+{% endblock %}
+
+{% block main %}
+  <section class="page-hero analyze-hero">
+    <p class="eyebrow">Past Paper Intelligence</p>
+    <h1>Evidence first. <em>Revision guidance second.</em></h1>
+    <p>Question boundaries are deterministic and source-linked. Optional GPT analysis suggests topics and difficulty for teacher review—it never predicts exact future questions.</p>
+  </section>
+
+  <section class="analysis-shell" aria-labelledby="analysis-title">
+    <aside class="analysis-controls glass-card">
+      <p class="panel-kicker"><span>01</span><span>Select a completed paper</span></p>
+      <h2 id="analysis-title">Prepare an analysis</h2>
+      <label for="analysis-history">Completed OCR run
+        <select id="analysis-history" size="8" aria-describedby="analysis-history-help"></select>
+      </label>
+      <small id="analysis-history-help">Select one paper to inspect. Hold Ctrl or Cmd to select multiple saved analyses for recurring-topic comparison.</small>
+      <label for="analysis-subject">Subject <input id="analysis-subject" type="text" maxlength="120" placeholder="Optional, e.g. Civil Engineering"></label>
+      <label for="analysis-level">Academic level <input id="analysis-level" type="text" maxlength="120" placeholder="Optional, e.g. Undergraduate"></label>
+      <label for="analysis-taxonomy">Topic taxonomy <textarea id="analysis-taxonomy" rows="4" maxlength="4000" placeholder="Optional topics, one per line"></textarea></label>
+      <button id="analysis-local" class="secondary-button" type="button">Prepare local question map</button>
+      <button id="analysis-practice-generate" class="secondary-button" type="button" disabled>Generate local practice starters</button>
+      <label class="analysis-consent"><input id="analysis-consent" type="checkbox"> I consent to send selected question text and source references to OpenAI for this analysis.</label>
+      <button id="analysis-cloud" class="run-button" type="button" disabled>Analyze with GPT-5.6</button>
+      <button id="analysis-compare" class="quiet-button" type="button">Compare selected analyses</button>
+      <p id="analysis-status" class="analysis-status" role="status" aria-live="polite">Choose a completed OCR paper to begin.</p>
+      <p class="analysis-privacy">OCR files and page previews stay local. Optional cloud analysis sends no source file, local path, or image.</p>
+    </aside>
+
+    <div class="analysis-workspace">
+      <section class="analysis-overview glass-card" aria-labelledby="analysis-overview-title">
+        <div class="analysis-heading"><div><p class="panel-kicker"><span>02</span><span>Review the evidence</span></p><h2 id="analysis-overview-title">No paper selected</h2></div><span id="analysis-model-status" class="status-pill">Local</span></div>
+        <div id="analysis-facts" class="analysis-facts"></div>
+        <div id="analysis-priorities" class="analysis-priorities"></div>
+        <section id="analysis-practice" class="analysis-practice hidden" aria-labelledby="analysis-practice-title">
+          <h3 id="analysis-practice-title">Teacher-reviewable practice suggestions</h3>
+          <p>These are grounded in selected historical questions. They are not predictions of future exam questions.</p>
+          <ul id="analysis-practice-list"></ul>
+        </section>
+        <div id="analysis-downloads" class="analysis-downloads hidden">
+          <a id="analysis-download-markdown" class="quiet-button" href="#">Download analysis Markdown</a>
+          <a id="analysis-download-json" class="quiet-button" href="#">Download analysis JSON</a>
+          <a id="analysis-download-docx" class="quiet-button" href="#">Download analysis DOCX</a>
+        </div>
+      </section>
+      <section class="analysis-detail-grid">
+        <section class="analysis-questions glass-card" aria-labelledby="analysis-questions-title"><h2 id="analysis-questions-title">Questions</h2><div id="analysis-question-list" class="analysis-question-list"><p class="empty-copy">Question records will appear here after local preparation.</p></div></section>
+        <section class="analysis-source glass-card" aria-labelledby="analysis-source-title"><h2 id="analysis-source-title">Source evidence</h2><p id="analysis-source-meta" class="analysis-source-meta">Select a question to inspect its source page, crop, OCR confidence, and AI confidence.</p><div id="analysis-source-preview" class="analysis-source-preview"></div></section>
+      </section>
+    </div>
+  </section>
+{% endblock %}

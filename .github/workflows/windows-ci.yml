@@ -1,0 +1,76 @@
+name: PredixaLearn monorepo CI
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "23 3 * * 1"
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install Python dependencies
+        working-directory: apps/ocr-studio
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+      - name: Install and vendor browser assets
+        run: |
+          npm ci
+          npm run assets:sync
+          npm run vendor
+          npm run assets:verify
+          npm run typecheck
+      - name: Lint and test
+        working-directory: apps/ocr-studio
+        run: |
+          python -m ruff check app tests run.py
+          python -m pytest -q --cov=app --cov-branch --cov-report=xml
+          python -m pytest tests/storage/test_history.py tests/documents/test_artifacts.py tests/documents/test_builder_security.py tests/documents/test_artifact_modules.py -q --cov=app.storage.history --cov=app.documents.artifact_manifest --cov=app.documents.artifact_publishing --cov=app.documents.artifact_quality --cov=app.documents.naming --cov-branch --cov-fail-under=85
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-coverage
+          path: apps/ocr-studio/coverage.xml
+      - name: Dependency audit
+        working-directory: apps/ocr-studio
+        run: python -m pip_audit -r requirements.txt
+      - name: Browser and accessibility smoke test
+        env:
+          PREDIXALEARN_PYTHON: python
+        run: |
+          npx playwright install chromium
+          npm run test:ocr
+      - name: CPU HTTP smoke test
+        shell: pwsh
+        working-directory: apps/ocr-studio
+        env:
+          OCR_DEVICE: cpu
+        run: |
+          $server = Start-Process -FilePath python -ArgumentList "run.py", "--no-browser" -PassThru -WindowStyle Hidden
+          try {
+            $deadline = (Get-Date).AddMinutes(2)
+            do {
+              try { $response = Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/api/v1/capabilities; break } catch { Start-Sleep -Milliseconds 500 }
+            } while ((Get-Date) -lt $deadline)
+            if (-not $response -or $response.StatusCode -ne 200) { throw "The CPU HTTP smoke test did not start the service." }
+          }
+          finally {
+            if (-not $server.HasExited) { Stop-Process -Id $server.Id -Force }
+          }
+      - name: Release install and rollback smoke test
+        shell: pwsh
+        working-directory: apps/ocr-studio
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File tests/scripts/test_release_scripts.ps1

@@ -1,0 +1,75 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: predixalearn
+      POSTGRES_USER: predixalearn
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    secrets: ["postgres_password"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U predixalearn"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  redis:
+    image: redis:7.4-alpine
+    command: ["sh", "-c", "redis-server --appendonly yes --requirepass \"$$(cat /run/secrets/redis_password)\""]
+    volumes: ["redis-data:/data"]
+    secrets: ["redis_password"]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$(cat /run/secrets/redis_password)\" ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: predixalearn
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_password
+    volumes: ["object-data:/data"]
+    secrets: ["minio_password"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  minio-bootstrap:
+    image: minio/mc:RELEASE.2025-04-16T18-13-26Z
+    depends_on:
+      minio: {condition: service_healthy}
+    secrets: ["minio_password"]
+    entrypoint: ["sh", "-c"]
+    command: ["mc alias set local http://minio:9000 predixalearn $$(cat /run/secrets/minio_password) && mc mb --ignore-existing local/predixalearn"]
+  institution-server:
+    build:
+      context: ../../..
+      dockerfile: apps/institution-server/Dockerfile
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      minio-bootstrap: {condition: service_completed_successfully}
+    env_file: ["${PREDIXALEARN_INSTITUTION_ENV_FILE:-institution.env.example}"]
+    environment:
+      PREDIXALEARN_INSTITUTION_ENV: production
+      PREDIXALEARN_STORAGE_PROVIDER: s3
+      PREDIXALEARN_S3_BUCKET: predixalearn
+      PREDIXALEARN_S3_ENDPOINT_URL: http://minio:9000
+      AWS_ACCESS_KEY_ID: predixalearn
+    command: ["sh", "-c", "export PREDIXALEARN_DATABASE_URL=postgresql+psycopg://predixalearn:$$(cat /run/secrets/postgres_password)@postgres:5432/predixalearn PREDIXALEARN_REDIS_URL=redis://:$$(cat /run/secrets/redis_password)@redis:6379/0 AWS_SECRET_ACCESS_KEY=$$(cat /run/secrets/minio_password); alembic upgrade head && uvicorn institution_server.main:app --host 0.0.0.0 --port 8100 --proxy-headers --forwarded-allow-ips=$${PREDIXALEARN_PROXY_IPS:-127.0.0.1}"]
+    ports: ["127.0.0.1:8100:8100"]
+    read_only: true
+    tmpfs: ["/tmp"]
+    security_opt: ["no-new-privileges:true"]
+    secrets: ["postgres_password", "redis_password", "minio_password"]
+
+volumes:
+  postgres-data:
+  redis-data:
+  object-data:
+
+secrets:
+  postgres_password: {file: ./secrets/postgres-password.txt}
+  redis_password: {file: ./secrets/redis-password.txt}
+  minio_password: {file: ./secrets/minio-password.txt}

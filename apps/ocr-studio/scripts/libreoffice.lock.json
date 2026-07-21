@@ -1,0 +1,9 @@
+{
+  "version": "26.2.4",
+  "architecture": "x86_64",
+  "url": "https://download.documentfoundation.org/libreoffice/stable/26.2.4/win/x86_64/LibreOffice_26.2.4_Win_x86-64.msi",
+  "sha256": "202f26cda071c5aa4996a5a28412fddceb3891dceb0366982c62650456c0730f",
+  "maximum_download_bytes": 524288000,
+  "install_relative_path": ".tools/libreoffice/26.2.4",
+  "executable_relative_path": "program/soffice.com"
+}

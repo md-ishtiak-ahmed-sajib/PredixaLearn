@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "predixalearn-institution-protocol"
+version = "0.1.0"
+description = "Versioned contracts shared by PredixaLearn and institution services"
+requires-python = ">=3.12"
+dependencies = ["pydantic>=2.12,<3"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["predixalearn_protocol*"]

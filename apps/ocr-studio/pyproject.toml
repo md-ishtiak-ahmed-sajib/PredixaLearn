@@ -1,0 +1,22 @@
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+markers = ["gpu_stress: opt-in real GPU and 100-page PDF stress test"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = [
+  ".venv",
+  ".tools",
+  "app/history",
+  "output",
+  "tmp",
+]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B", "S", "ASYNC", "PERF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "S104"]
+"tests/workflows/test_stress.py" = ["S603", "S607"]

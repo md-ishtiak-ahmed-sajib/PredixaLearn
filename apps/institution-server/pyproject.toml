@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "predixalearn-institution-server"
+version = "0.1.0"
+description = "Institution-controlled archive, review, curriculum, dataset, worker, and LMS service"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.139,<1",
+  "uvicorn[standard]>=0.51,<1",
+  "pydantic>=2.12,<3",
+  "sqlalchemy>=2.0.48,<3",
+  "psycopg[binary]>=3.3.3,<4",
+  "PyJWT[crypto]>=2.12,<3",
+  "httpx>=0.28,<1",
+  "jinja2>=3.1.6,<4",
+  "python-multipart>=0.0.22,<1",
+  "redis>=7.3,<8",
+  "alembic>=1.18,<2",
+]
+
+[project.optional-dependencies]
+s3 = ["boto3>=1.42,<2"]
+azure = ["azure-identity>=1.25,<2", "azure-storage-blob>=12.28,<13"]
+test = ["pytest>=9,<10", "pytest-cov>=7,<8"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["institution_server*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B", "S", "ASYNC", "PERF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "S105"]
+"migrations/**/*.py" = ["E501"]

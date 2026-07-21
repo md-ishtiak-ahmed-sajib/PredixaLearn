@@ -1,0 +1,10 @@
+{
+  "name": "PredixaLearn",
+  "tagline": "Predict Smarter. Learn Better.",
+  "version": 1,
+  "masters": {
+    "mark": "source/ocr-logo-masters/predixalearn-mark-1024.png"
+  },
+  "accent": "#1590db",
+  "mint": "#9fe7bf"
+}

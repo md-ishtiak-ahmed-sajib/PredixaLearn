@@ -1,0 +1,105 @@
+// @ts-check
+export {};
+
+const byId = (id) => /** @type {HTMLElement} */ (document.getElementById(id));
+const statusNode = byId("teacher-status");
+
+async function api(url, options = {}) {
+  const response = await fetch(url, { cache: "no-store", ...options });
+  const body = response.status === 204 ? null : await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body?.detail || `Request failed (${response.status})`);
+  return body;
+}
+function setStatus(text, error = false) { statusNode.textContent = text; statusNode.classList.toggle("error-callout", error); }
+function node(tag, className, text) { const value = document.createElement(tag); value.className = className || ""; if (text !== undefined) value.textContent = text; return value; }
+function lines(id) { return /** @type {HTMLTextAreaElement} */ (byId(id)).value.split(/\r?\n/).map((value) => value.trim()).filter(Boolean); }
+let taxonomyNodes = JSON.parse(/** @type {HTMLTextAreaElement} */ (byId("taxonomy-nodes")).value);
+let currentSyllabus = null;
+function renderTaxonomyTree() {
+  const root = byId("taxonomy-tree"); const parent = /** @type {HTMLSelectElement} */ (byId("taxonomy-node-parent")); const query = /** @type {HTMLInputElement} */ (byId("taxonomy-search")).value.trim().toLowerCase(); root.replaceChildren(); parent.replaceChildren(new Option("Root topic", ""));
+  const byParent = new Map(); for (const item of taxonomyNodes) { const key = item.parent_id || ""; byParent.set(key, [...(byParent.get(key) || []), item]); parent.append(new Option(item.label, item.node_id)); }
+  const appendBranch = (parentId, depth) => { for (const item of byParent.get(parentId) || []) { const searchable = `${item.label} ${(item.aliases || []).join(" ")} ${item.description || ""}`.toLowerCase(); if (!query || searchable.includes(query)) { const row = node("div", "taxonomy-node"); row.setAttribute("role", "treeitem"); row.setAttribute("aria-level", String(depth + 1)); row.style.setProperty("--tree-depth", String(depth)); row.append(node("strong", "", item.label), node("span", "", (item.aliases || []).join(", "))); if (item.node_id !== "unmapped-legacy") { const remove = node("button", "quiet-button", "Remove"); remove.type = "button"; remove.addEventListener("click", () => { taxonomyNodes = taxonomyNodes.filter((value) => value.node_id !== item.node_id && value.parent_id !== item.node_id); renderTaxonomyTree(); }); row.append(remove); } root.append(row); } appendBranch(item.node_id, depth + 1); } }; appendBranch("", 0); /** @type {HTMLTextAreaElement} */ (byId("taxonomy-nodes")).value = JSON.stringify(taxonomyNodes);
+}
+byId("taxonomy-node-add").addEventListener("click", () => { const label = /** @type {HTMLInputElement} */ (byId("taxonomy-node-label")).value.trim(); if (!label) return setStatus("Enter a topic label before adding the node.", true); const nodeId = `topic-${crypto.randomUUID()}`; taxonomyNodes.push({ node_id: nodeId, parent_id: /** @type {HTMLSelectElement} */ (byId("taxonomy-node-parent")).value || null, label, aliases: /** @type {HTMLInputElement} */ (byId("taxonomy-node-aliases")).value.split(",").map((value) => value.trim()).filter(Boolean), description: /** @type {HTMLInputElement} */ (byId("taxonomy-node-description")).value.trim() }); /** @type {HTMLInputElement} */ (byId("taxonomy-node-label")).value = ""; renderTaxonomyTree(); });
+byId("taxonomy-search").addEventListener("input", renderTaxonomyTree);
+
+async function loadDashboard() {
+  const data = await api("/api/v1/dashboards/teacher");
+  const metrics = byId("teacher-metrics"); metrics.replaceChildren();
+  const values = [
+    ["Papers awaiting review", data.papers_awaiting_review.length], ["Pending corrections", data.pending_corrections],
+    ["Low-confidence papers", data.low_confidence_jobs], ["Unmapped questions", data.unmapped_questions],
+    ["Question approvals", data.question_bank_pending], ["Active batches", data.active_batches],
+  ];
+  for (const [label, value] of values) { const card = node("article", "metric-card"); card.append(node("strong", "", String(value)), node("span", "", String(label))); metrics.append(card); }
+  const audit = byId("teacher-audit"); audit.replaceChildren();
+  const recentAudit = data.recent_audit || [];
+  for (const event of [...recentAudit].reverse()) { const item = node("li", "audit-event"); item.append(node("strong", "", event.action.replaceAll("_", " ")), node("span", "", `${event.actor} · ${new Date(event.created_at).toLocaleString()}`)); audit.append(item); }
+  if (!recentAudit.length) audit.append(node("li", "empty-copy", "No teaching audit events yet."));
+}
+async function loadTaxonomies() {
+  const data = await api("/api/v1/taxonomies"); const root = byId("taxonomy-list"); root.replaceChildren();
+  for (const item of data.items) { const row = node("div", "compact-row"); row.append(node("strong", "", `${item.name} · v${item.version} · ${item.status}`)); const actions = node("div", "compact-actions"); for (const format of ["json", "csv"]) { const link = node("a", "quiet-button", `Export ${format.toUpperCase()}`); link.href = `/api/v1/taxonomies/${item.taxonomy_id}/export?format=${format}&version=${item.version}`; actions.append(link); } row.append(actions); root.append(row); }
+  if (!data.items.length) root.append(node("p", "empty-copy", "No taxonomy versions yet."));
+}
+async function loadSyllabi() {
+  const data = await api("/api/v1/syllabi"); const root = byId("syllabus-list"); root.replaceChildren();
+  for (const item of data.items) root.append(node("p", "compact-row", `${item.name} · v${item.version} · ${item.status} · ${item.objectives.length} objective(s)`));
+  if (!data.items.length) root.append(node("p", "empty-copy", "No syllabus versions yet."));
+}
+async function loadBank() {
+  const status = /** @type {HTMLSelectElement} */ (byId("bank-filter-status")).value; const query = /** @type {HTMLInputElement} */ (byId("bank-filter-query")).value;
+  const params = new URLSearchParams({ limit: "100", query }); if (status) params.set("status", status);
+  const data = await api(`/api/v1/question-bank?${params}`); const root = byId("bank-list"); root.replaceChildren();
+  for (const item of data.items) root.append(node("p", "compact-row", `${item.payload.text || item.question_id} · ${item.status}${item.stale ? " · stale" : ""} · ${item.item_id}`));
+  if (!data.items.length) root.append(node("p", "empty-copy", "Approve source-linked questions from Review or the API to build the bank."));
+}
+function renderBatches(items) {
+  const root = byId("batch-list"); root.replaceChildren();
+  for (const batch of items) {
+    const card = node("article", "batch-row"); card.append(node("strong", "", batch.name), node("span", `status-pill status-${batch.status}`, batch.status));
+    const progress = document.createElement("progress"); progress.max = batch.items.length; progress.value = batch.items.filter((item) => item.status === "completed").length; card.append(progress);
+    card.append(node("small", "", `${progress.value} of ${progress.max} complete; ${batch.items.filter((item) => item.status === "failed").length} failed`));
+    const actions = node("div", "compact-actions");
+    for (const [label, state] of [["Pause", "paused"], ["Resume", "queued"], ["Cancel", "cancelled"]]) { const button = node("button", "quiet-button", label); button.type = "button"; button.addEventListener("click", async () => { await api(`/api/v1/batches/${batch.batch_id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: state }) }); await loadBatches(); }); actions.append(button); }
+    const download = node("a", "quiet-button", "Combined manifest"); download.href = `/api/v1/batches/${batch.batch_id}/export`; actions.append(download);
+    for (const item of batch.items) {
+      if (!["queued", "failed", "interrupted"].includes(item.status)) continue;
+      if (item.status === "queued") {
+        const next = node("button", "quiet-button", `Process next: ${item.input_name}`); next.type = "button";
+        next.addEventListener("click", async () => { await api(`/api/v1/batches/${batch.batch_id}/items/${item.item_id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "process_next" }) }); await loadBatches(); }); actions.append(next);
+      }
+      for (const [label, action] of [["Move up", "move_up"], ["Move down", "move_down"]]) {
+        const button = node("button", "quiet-button", `${label}: ${item.input_name}`); button.type = "button";
+        button.addEventListener("click", async () => { await api(`/api/v1/batches/${batch.batch_id}/items/${item.item_id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action }) }); await loadBatches(); }); actions.append(button);
+      }
+      if (["failed", "interrupted"].includes(item.status)) { const retry = node("button", "quiet-button", `Retry: ${item.input_name}`); retry.type = "button"; retry.addEventListener("click", async () => { await api(`/api/v1/batches/${batch.batch_id}/items/${item.item_id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "retry" }) }); await loadBatches(); }); actions.append(retry); }
+    }
+    card.append(actions); root.append(card);
+  }
+  if (!items.length) root.append(node("p", "empty-copy", "No submitted batches."));
+}
+async function loadBatches() { renderBatches((await api("/api/v1/batches")).items); }
+async function loadLanguages() { const data = await api("/api/v1/languages/reliability"); const root = byId("language-reliability"); root.replaceChildren(); for (const item of data.items) { const row = node("article", "compact-row"); row.append(node("strong", "", item.label), node("span", "", `OCR: ${item.ocr}; segmentation: ${item.question_segmentation}; marks: ${item.marks_extraction}; mapping: ${item.taxonomy_mapping}; duplicates: ${item.duplicate_normalization}; analysis: ${item.analysis}; exports: ${item.export_fonts}; direction: ${item.right_to_left ? "right-to-left" : "left-to-right"}.`)); root.append(row); } }
+
+byId("teacher-refresh").addEventListener("click", async () => { try { await Promise.all([loadDashboard(), loadTaxonomies(), loadSyllabi(), loadBank(), loadBatches(), loadLanguages()]); setStatus("Teacher dashboard refreshed."); } catch (error) { setStatus(error.message, true); } });
+byId("taxonomy-form").addEventListener("submit", async (event) => { event.preventDefault(); try { const payload = { name: /** @type {HTMLInputElement} */ (byId("taxonomy-name")).value, subject: /** @type {HTMLInputElement} */ (byId("taxonomy-subject")).value, academic_level: /** @type {HTMLInputElement} */ (byId("taxonomy-level")).value, status: /** @type {HTMLSelectElement} */ (byId("taxonomy-status")).value, nodes: JSON.parse(/** @type {HTMLTextAreaElement} */ (byId("taxonomy-nodes")).value) }; await api("/api/v1/taxonomies", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); await loadTaxonomies(); setStatus("Taxonomy version saved after cycle and alias validation."); } catch (error) { setStatus(error.message, true); } });
+byId("taxonomy-import-form").addEventListener("submit", async (event) => { event.preventDefault(); const file = /** @type {HTMLInputElement} */ (byId("taxonomy-import-file")).files?.[0]; if (!file) return; const body = new FormData(); body.append("file", file); body.append("name", file.name.replace(/\.[^.]+$/, "")); try { await api("/api/v1/taxonomies/import", { method: "POST", body }); await loadTaxonomies(); setStatus("Taxonomy imported as a validated draft."); } catch (error) { setStatus(error.message, true); } });
+function renderSyllabusReview() {
+  const root = byId("syllabus-objectives"); root.replaceChildren(); if (!currentSyllabus) return;
+  for (const objective of currentSyllabus.objectives) { const label = node("label", "compact-row"); const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.checked = objective.confirmed; checkbox.disabled = !objective.inferred; checkbox.dataset.objectiveId = objective.objective_id; label.append(checkbox, document.createTextNode(`${objective.code || objective.objective_id} · ${objective.label}${objective.inferred ? " · inferred" : " · imported"}`)); root.append(label); }
+  byId("syllabus-review").classList.remove("hidden");
+}
+byId("syllabus-form").addEventListener("submit", async (event) => { event.preventDefault(); const file = /** @type {HTMLInputElement} */ (byId("syllabus-file")).files?.[0]; if (!file) return; const body = new FormData(); body.append("file", file); body.append("name", /** @type {HTMLInputElement} */ (byId("syllabus-name")).value); body.append("subject", /** @type {HTMLInputElement} */ (byId("syllabus-subject")).value); try { const result = await api("/api/v1/syllabi/import", { method: "POST", body }); currentSyllabus = result; byId("syllabus-result").textContent = `${result.name} v${result.version}: ${result.objectives.length} objective(s), ${result.warnings.length} warning(s).`; const objective = /** @type {HTMLSelectElement} */ (byId("mapping-objective")); objective.replaceChildren(...result.objectives.map((item) => new Option(`${item.code || item.objective_id} · ${item.label}${item.inferred && !item.confirmed ? " · confirmation required" : ""}`, item.objective_id))); byId("mapping-form").classList.remove("hidden"); renderSyllabusReview(); await loadSyllabi(); setStatus("Syllabus stored as a local draft."); } catch (error) { setStatus(error.message, true); } });
+byId("syllabus-publish").addEventListener("click", async () => { if (!currentSyllabus) return; const confirmed = new Set([...document.querySelectorAll("[data-objective-id]:checked")].map((input) => /** @type {HTMLInputElement} */ (input).dataset.objectiveId)); const objectives = currentSyllabus.objectives.map((item) => ({ ...item, confirmed: !item.inferred || confirmed.has(item.objective_id) })); const payload = { name: currentSyllabus.name, subject: currentSyllabus.subject, academic_level: currentSyllabus.academic_level, status: "published", source_type: currentSyllabus.source_type, source_checksum: currentSyllabus.source_checksum, warnings: currentSyllabus.warnings, objectives }; try { currentSyllabus = await api(`/api/v1/syllabi/${currentSyllabus.syllabus_id}/versions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); renderSyllabusReview(); await loadSyllabi(); setStatus("Teacher-confirmed syllabus published as a new immutable version."); } catch (error) { setStatus(error.message, true); } });
+byId("mapping-form").addEventListener("submit", async (event) => { event.preventDefault(); if (!currentSyllabus) return; const payload = { job_id: /** @type {HTMLInputElement} */ (byId("mapping-job")).value, question_id: /** @type {HTMLInputElement} */ (byId("mapping-question")).value, syllabus_version: currentSyllabus.version, objective_id: /** @type {HTMLSelectElement} */ (byId("mapping-objective")).value, status: /** @type {HTMLSelectElement} */ (byId("mapping-status")).value, method: "teacher" }; try { await api(`/api/v1/syllabi/${currentSyllabus.syllabus_id}/mappings`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); setStatus("Question mapping saved against the exact syllabus version."); } catch (error) { setStatus(error.message, true); } });
+byId("duplicate-check").addEventListener("click", async () => { try { const data = await api("/api/v1/duplicates/check", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ job_ids: lines("duplicate-jobs"), threshold: Number(/** @type {HTMLInputElement} */ (byId("duplicate-threshold")).value) }) }); const root = byId("duplicate-results"); root.replaceChildren(); for (const match of data.matches) { const row = node("div", "compact-row"); row.append(node("p", "", `${match.left_question_key} ↔ ${match.right_question_key}: ${Math.round(match.score * 100)}% (${match.method}); ${match.changed_numbers ? "numbers changed" : "same numeric evidence"}. No automatic merge.`)); const actions = node("div", "compact-actions"); for (const disposition of ["duplicate", "variant", "related", "unrelated"]) { const button = node("button", "quiet-button", disposition); button.type = "button"; button.addEventListener("click", async () => { await api("/api/v1/duplicates/check", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ questions: [], decisions: [{ ...match, disposition, explanation: { shared_phrases: match.shared_phrases, changed_numbers: match.changed_numbers } }] }) }); button.textContent = `${disposition} saved`; }); actions.append(button); } row.append(actions); root.append(row); } if (!data.matches.length) root.append(node("p", "empty-copy", "No matches crossed the selected threshold.")); setStatus(`Checked ${data.question_count} questions locally.`); } catch (error) { setStatus(error.message, true); } });
+byId("bank-form").addEventListener("submit", async (event) => { event.preventDefault(); const marksText = /** @type {HTMLInputElement} */ (byId("bank-marks")).value; const jobId = /** @type {HTMLInputElement} */ (byId("bank-job")).value; const payload = { job_id: jobId, question_id: /** @type {HTMLInputElement} */ (byId("bank-question")).value, status: /** @type {HTMLSelectElement} */ (byId("bank-status")).value, payload: { text: /** @type {HTMLTextAreaElement} */ (byId("bank-text")).value, marks: marksText ? Number(marksText) : null, topic: /** @type {HTMLInputElement} */ (byId("bank-topic")).value || null, language: "en", source_job_id: jobId, source_page: Number(/** @type {HTMLInputElement} */ (byId("bank-page")).value), provenance: "immutable OCR plus teacher overlay" } }; try { await api("/api/v1/question-bank", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); await loadBank(); setStatus("Question-bank item saved with source hash and provenance."); } catch (error) { setStatus(error.message, true); } });
+byId("bank-export").addEventListener("click", async () => { const formats = [...document.querySelectorAll('input[name="bank-format"]:checked')].map((input) => /** @type {HTMLInputElement} */ (input).value); try { const data = await api("/api/v1/question-bank/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ formats, include_source_images: false }) }); const link = /** @type {HTMLAnchorElement} */ (byId("bank-download")); link.href = data.download_url; link.classList.remove("hidden"); setStatus(`Export validated: ${data.item_count} approved item(s), manifest and SHA-256 checksums included.`); } catch (error) { setStatus(error.message, true); } });
+byId("comparison-create").addEventListener("click", async () => { try { const data = await api("/api/v1/comparisons", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ job_ids: lines("comparison-jobs"), name: "Teacher comparison" }) }); const root = byId("comparison-result"); root.replaceChildren(node("p", "", data.report.statement), node("p", "compact-row", `${data.report.paper_count} papers · ${data.report.duplicates.length} duplicate candidate(s) · ${data.report.topics.length} topic group(s).`)); setStatus("Historical comparison report saved with source hashes."); } catch (error) { setStatus(error.message, true); } });
+byId("batch-form").addEventListener("submit", async (event) => { event.preventDefault(); const selected = [...(/** @type {HTMLInputElement} */ (byId("batch-files")).files || []), ...(/** @type {HTMLInputElement} */ (byId("batch-folder")).files || [])]; if (!selected.length) return setStatus("Choose individual files or a folder before submitting the batch.", true); const body = new FormData(); for (const file of selected) body.append("files", file); body.append("name", /** @type {HTMLInputElement} */ (byId("batch-name")).value); body.append("workflow", /** @type {HTMLSelectElement} */ (byId("batch-workflow")).value); body.append("language", /** @type {HTMLInputElement} */ (byId("batch-language")).value); body.append("document_profile", "auto"); body.append("remove_terms", JSON.stringify(lines("batch-remove-terms"))); body.append("per_file_overrides", /** @type {HTMLTextAreaElement} */ (byId("batch-overrides")).value || "{}"); try { await api("/api/v1/batches", { method: "POST", body }); await loadBatches(); setStatus("Persistent batch submitted. Staged sources remain local and are deleted after completion or cancellation."); } catch (error) { setStatus(error.message, true); } });
+
+byId("bank-filter").addEventListener("click", () => loadBank().catch((error) => setStatus(error.message, true)));
+Promise.all([loadDashboard(), loadTaxonomies(), loadSyllabi(), loadBank(), loadBatches(), loadLanguages()]).catch((error) => setStatus(error.message, true));
+renderTaxonomyTree();
+window.setInterval(() => loadBatches().catch(() => {}), 3000);

@@ -1,0 +1,90 @@
+name: Institution platform
+
+on:
+  pull_request:
+    paths:
+      - "apps/institution-server/**"
+      - "packages/institution-protocol/**"
+      - "apps/ocr-studio/app/institution/**"
+      - "apps/ocr-studio/app/api/institution.py"
+      - ".github/workflows/institution-platform.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/institution-server/**"
+      - "packages/institution-protocol/**"
+      - "apps/ocr-studio/app/institution/**"
+      - "apps/ocr-studio/app/api/institution.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: predixalearn_test
+          POSTGRES_USER: predixalearn
+          POSTGRES_PASSWORD: test-password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U predixalearn"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7.4-alpine
+        ports: ["6379:6379"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e packages/institution-protocol -e 'apps/institution-server[test]' ruff pip-audit
+      - name: Static analysis
+        run: python -m ruff check apps/institution-server packages/institution-protocol apps/ocr-studio/app/institution apps/ocr-studio/app/api/institution.py
+      - name: Institution unit and API tests
+        run: python -m pytest -q apps/institution-server/tests --cov=apps/institution-server/institution_server --cov-branch --cov-fail-under=85 --cov-report=xml:institution-coverage.xml
+      - name: PostgreSQL migration smoke
+        working-directory: apps/institution-server
+        env:
+          PREDIXALEARN_INSTITUTION_ENV: test
+          PREDIXALEARN_DATABASE_URL: postgresql+psycopg://predixalearn:test-password@127.0.0.1:5432/predixalearn_test
+          PREDIXALEARN_AUTH_MODE: test
+          PREDIXALEARN_TEST_JWT_SECRET: ci-test-secret-at-least-32-bytes
+          PREDIXALEARN_STORAGE_ROOT: /tmp/predixalearn-storage
+        run: |
+          alembic upgrade head
+          alembic downgrade base
+          alembic upgrade head
+      - name: Browser module type check
+        run: |
+          npm ci --ignore-scripts
+          npm run typecheck:institution
+      - name: Teacher portal accessibility and browser tests
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:institution-ui
+      - name: Dependency audit
+        run: python -m pip_audit -r apps/institution-server/requirements.lock
+      - name: Build production image
+        run: docker build -f apps/institution-server/Dockerfile -t predixalearn-institution:test .
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: institution-coverage
+          path: |
+            institution-coverage.xml
+            apps/institution-server/test-results

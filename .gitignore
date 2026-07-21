@@ -1,0 +1,65 @@
+# Local Python environments and downloaded document tooling
+/.venv/
+/.venv-*/
+/.tools/
+/apps/ocr-studio/.venv/
+/apps/ocr-studio/.venv-*/
+/apps/ocr-studio/.tools/
+
+# Python and test output
+**/__pycache__/
+**/*.py[cod]
+**/*.egg-info/
+**/*.egg
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+**/.pytype/
+**/.pyre/
+**/.hypothesis/
+**/.cache/
+**/.coverage
+**/coverage.xml
+**/htmlcov/
+**/playwright-report/
+**/test-results/
+
+# Node installs and generated browser tooling output
+**/node_modules/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/.pnpm-debug.log*
+
+# Local OCR runtime records. The application defaults to LocalAppData.
+/apps/ocr-studio/app/history/
+/apps/ocr-studio/input/
+/apps/ocr-studio/output/
+/apps/ocr-studio/logs/
+/apps/ocr-studio/tmp/
+/release-manifest/
+/apps/ocr-studio/desktop-release/
+/apps/ocr-studio/desktop-release-*/
+/apps/ocr-studio/desktop-bootstrap-*/
+/apps/ocr-studio/dist/
+/apps/ocr-studio/build/
+/apps/ocr-studio/release-manifest/
+/installer/builds/
+/apps/institution-server/.test-data/
+/apps/institution-server/.test-storage/
+**/.test-storage/
+/apps/institution-server/institution-storage/
+/apps/institution-server/predixalearn-institution.sqlite3*
+/apps/institution-server/deploy/institution.env
+/apps/institution-server/deploy/secrets/
+*.uploading
+*.history-import
+
+# IDE and operating-system files
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
+Desktop.ini
+.DS_Store

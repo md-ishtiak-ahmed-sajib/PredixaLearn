@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PredixaLearn Student Revision</title>
+  <link rel="stylesheet" href="/static/portal.css">
+  <script type="module" src="/static/revision.js"></script>
+</head>
+<body>
+  <header class="topbar"><div><strong>PredixaLearn</strong><small>Student revision</small></div><form action="/auth/logout" method="post"><button>Sign out</button></form></header>
+  <main class="shell">
+    <section class="hero"><p class="eyebrow">Teacher-approved practice</p><h1>Revise from evidence your course has approved.</h1><p id="revision-identity" role="status">Loading your authorized course context…</p></section>
+    <section class="panel" aria-labelledby="revision-title"><h2 id="revision-title">Available revision packs</h2><p>Draft questions, teacher notes, hidden marks, and other learners' progress are never included.</p><div id="revision-packs" class="cards" aria-live="polite"></div></section>
+    <section class="panel" aria-labelledby="progress-title"><h2 id="progress-title">My progress</h2><p>Progress is private to your signed-in learner identity.</p><div id="revision-progress" class="cards"></div></section>
+    <p id="revision-status" class="notice hidden" role="status" aria-live="polite"></p>
+  </main>
+</body>
+</html>

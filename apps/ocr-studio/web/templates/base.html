@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Local-first, source-linked intelligence for scanned exam papers.">
+  <meta name="theme-color" content="#d7ecf7">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/predixalearn-mark-32.png?v={{ asset_versions.get('predixalearn-mark-32.png', '1') }}">
+  <link rel="icon" type="image/png" sizes="48x48" href="/static/predixalearn-mark-48.png?v={{ asset_versions.get('predixalearn-mark-48.png', '1') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/predixalearn-mark-180.png?v={{ asset_versions.get('predixalearn-mark-180.png', '1') }}">
+  <title>{% block title %}PredixaLearn &middot; Exam paper intelligence{% endblock %}</title>
+  <link rel="stylesheet" href="/static/app.css?v={{ asset_versions.get('app.css', '1') }}">
+  <script src="/static/common.js?v={{ asset_versions.get('common.js', '1') }}" defer></script>
+  <script src="/static/maintenance.js?v={{ asset_versions.get('maintenance.js', '1') }}" defer></script>
+  {% if desktop_mode %}<meta name="predixalearn-control-token" content="{{ desktop_control_token }}">
+  <script src="/static/desktop.js?v={{ asset_versions.get('desktop.js', '1') }}" defer></script>{% endif %}
+  {% block scripts %}{% endblock %}
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/" aria-label="PredixaLearn home">
+        <img class="brand-mark" src="/static/predixalearn-mark-48.png?v={{ asset_versions.get('predixalearn-mark-48.png', '1') }}" width="48" height="48" alt="">
+        <span class="brand-copy">
+          <strong>PredixaLearn</strong>
+          <small>Predict Smarter. Learn Better.</small>
+        </span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a class="nav-link{% if page == 'home' %} active{% endif %}"{% if page == 'home' %} aria-current="page"{% endif %} href="/">Convert</a>
+        <a class="nav-link{% if page == 'analyze' %} active{% endif %}"{% if page == 'analyze' %} aria-current="page"{% endif %} href="/analyze">Analyze</a>
+        <a class="nav-link{% if page == 'review' %} active{% endif %}"{% if page == 'review' %} aria-current="page"{% endif %} href="/review">Review</a>
+        <a class="nav-link{% if page == 'history' %} active{% endif %}"{% if page == 'history' %} aria-current="page"{% endif %} href="/history">History</a>
+        <a class="nav-link{% if page == 'teacher' %} active{% endif %}"{% if page == 'teacher' %} aria-current="page"{% endif %} href="/teacher">Teacher</a>
+        <a class="nav-link{% if page == 'revision' %} active{% endif %}"{% if page == 'revision' %} aria-current="page"{% endif %} href="/revision">Revision</a>
+        <a class="nav-link{% if page == 'benchmark' %} active{% endif %}"{% if page == 'benchmark' %} aria-current="page"{% endif %} href="/benchmark">Benchmark</a>
+        <a class="nav-link{% if page == 'tips' %} active{% endif %}"{% if page == 'tips' %} aria-current="page"{% endif %} href="/tips">About &amp; Privacy</a>
+        <a class="nav-link nav-utility" href="/docs">Developer API</a>
+        <button id="maintenance-button" class="maintenance-button" type="button" disabled aria-haspopup="dialog" title="Maintenance requires an internet connection">Maintenance</button>
+        {% if desktop_mode %}<button id="quit-app-button" class="quit-app-button" type="button" aria-haspopup="dialog">Quit app</button>{% endif %}
+        <a id="health-badge" class="health health-checking" href="/tips#service-health">Checking service</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>{% block main %}{% endblock %}</main>
+
+  <footer>
+    <span>PredixaLearn</span>
+    <span class="footer-separator" aria-hidden="true">&middot;</span>
+    <span>Copyright &copy; 2026 Md Ishtiak Ahmed Sajib</span>
+    <span class="footer-separator" aria-hidden="true">&middot;</span>
+    <span>OCR stays local; optional GPT analysis requires explicit consent.</span>
+  </footer>
+
+  <dialog id="maintenance-dialog" class="maintenance-dialog" aria-labelledby="maintenance-title" aria-describedby="maintenance-notice">
+    <div class="dialog-heading">
+      <div>
+        <p class="panel-kicker"><span>Maintenance</span><span>Online-only runtime updates</span></p>
+        <h2 id="maintenance-title">Runtime maintenance</h2>
+      </div>
+      <button id="maintenance-close" class="quiet-button" type="button" aria-label="Close maintenance dialog">Close</button>
+    </div>
+    <p id="maintenance-notice" class="maintenance-notice">Maintenance in progress: We are updating our systems and appreciate your patience.</p>
+    <p id="maintenance-status" class="maintenance-status" role="status" aria-live="polite">Connect to the approved maintenance channel to review updates.</p>
+    <section id="maintenance-progress" class="maintenance-progress" aria-labelledby="maintenance-progress-title" aria-busy="false" hidden>
+      <div class="maintenance-progress-heading">
+        <div>
+          <h3 id="maintenance-progress-title">Maintenance progress</h3>
+          <p id="maintenance-progress-stage">Waiting to check for updates.</p>
+        </div>
+        <strong id="maintenance-progress-value" aria-hidden="true"></strong>
+      </div>
+      <progress id="maintenance-progress-bar" max="100" aria-describedby="maintenance-progress-stage maintenance-status">0%</progress>
+    </section>
+    <section class="maintenance-section" aria-labelledby="maintenance-inventory-title">
+      <h3 id="maintenance-inventory-title">Installed components</h3>
+      <ul id="maintenance-inventory" class="maintenance-list" aria-live="polite"></ul>
+    </section>
+    <section class="maintenance-section" aria-labelledby="maintenance-ready-title">
+      <h3 id="maintenance-ready-title">Ready to update</h3>
+      <ul id="maintenance-ready" class="maintenance-list maintenance-ready-list" aria-live="polite"></ul>
+    </section>
+    <section class="maintenance-section" aria-labelledby="maintenance-blocked-title">
+      <h3 id="maintenance-blocked-title">Blocked or incompatible</h3>
+      <ul id="maintenance-blocked" class="maintenance-list maintenance-blocked-list" aria-live="polite"></ul>
+    </section>
+    <div class="maintenance-actions">
+      <button id="maintenance-check" class="secondary-button" type="button">Check again</button>
+      <button id="maintenance-apply" class="run-button" type="button" disabled>Apply reviewed updates</button>
+      <button id="maintenance-cancel" class="quiet-button" type="button" hidden>Cancel maintenance</button>
+    </div>
+  </dialog>
+  {% if desktop_mode %}<dialog id="quit-app-dialog" class="maintenance-dialog quit-app-dialog" aria-labelledby="quit-app-title" aria-describedby="quit-app-copy">
+    <div class="dialog-heading">
+      <div>
+        <p class="panel-kicker"><span>Desktop app</span><span>Local-only service</span></p>
+        <h2 id="quit-app-title">Quit PredixaLearn?</h2>
+      </div>
+      <button id="quit-app-close" class="quiet-button" type="button">Keep working</button>
+    </div>
+    <p id="quit-app-copy" class="maintenance-notice">This closes the local OCR service. Your existing History and output files stay on this PC.</p>
+    <p id="quit-app-status" class="maintenance-status" role="status" aria-live="polite">Finish or cancel any OCR work before quitting.</p>
+    <div class="maintenance-actions">
+      <button id="quit-app-cancel" class="secondary-button" type="button">Cancel</button>
+      <button id="quit-app-confirm" class="danger-button" type="button">Quit PredixaLearn</button>
+    </div>
+  </dialog>{% endif %}
+</body>
+</html>

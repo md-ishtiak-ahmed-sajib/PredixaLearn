@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block main %}
+  <section class="page-hero">
+    <p class="eyebrow">Reproducible evaluation</p>
+    <h1>Measure reconstruction. <em>Do not make unsupported claims.</em></h1>
+    <p>PredixaLearn ships a synthetic regression fixture and a benchmark harness. Real-world results are published only after permission-cleared papers and manually verified ground truth are available.</p>
+  </section>
+  <section class="benchmark-grid" aria-label="Benchmark information">
+    <article class="info-card"><h2>What is measured</h2><p>Character and word error, question-number accuracy, reading order, equation/table/figure handling, traceability, processing time, correction time, and AI-grounding rate.</p></article>
+    <article class="info-card"><h2>Current evidence</h2><p>The bundled Judge Demo is an original synthetic fixture for regression testing. It is not presented as a real-world accuracy benchmark.</p></article>
+    <article class="info-card"><h2>Run a benchmark</h2><p>Follow the reproducible manifest and report instructions in the project documentation, then record hardware, OCR/model versions, source permissions, and known limitations.</p><a class="secondary-button" href="/docs">Open developer documentation</a></article>
+  </section>
+{% endblock %}

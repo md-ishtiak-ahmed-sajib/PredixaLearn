@@ -1,0 +1,342 @@
+{
+  "protocol_version": "2026-07-01",
+  "schemas": {
+    "SyncEnvelope": {
+      "$defs": {
+        "ArtifactDescriptor": {
+          "additionalProperties": false,
+          "properties": {
+            "artifact_id": {
+              "title": "Artifact Id",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "source_document",
+                "result_json",
+                "markdown",
+                "docx",
+                "preview",
+                "crop",
+                "table",
+                "dataset_export"
+              ],
+              "title": "Kind",
+              "type": "string"
+            },
+            "media_type": {
+              "maxLength": 255,
+              "minLength": 1,
+              "title": "Media Type",
+              "type": "string"
+            },
+            "sha256": {
+              "pattern": "^[a-f0-9]{64}$",
+              "title": "Sha256",
+              "type": "string"
+            },
+            "size_bytes": {
+              "minimum": 0,
+              "title": "Size Bytes",
+              "type": "integer"
+            },
+            "storage_key": {
+              "anyOf": [
+                {
+                  "maxLength": 1024,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Storage Key"
+            }
+          },
+          "required": [
+            "kind",
+            "sha256",
+            "size_bytes",
+            "media_type"
+          ],
+          "title": "ArtifactDescriptor",
+          "type": "object"
+        },
+        "SyncEvent": {
+          "additionalProperties": false,
+          "properties": {
+            "event_id": {
+              "title": "Event Id",
+              "type": "string"
+            },
+            "event_type": {
+              "enum": [
+                "archive.upsert",
+                "analysis.upsert",
+                "review.upsert",
+                "artifact.publish",
+                "archive.delete_requested"
+              ],
+              "title": "Event Type",
+              "type": "string"
+            },
+            "idempotency_key": {
+              "maxLength": 200,
+              "minLength": 16,
+              "title": "Idempotency Key",
+              "type": "string"
+            },
+            "occurred_at": {
+              "format": "date-time",
+              "title": "Occurred At",
+              "type": "string"
+            },
+            "payload": {
+              "additionalProperties": true,
+              "title": "Payload",
+              "type": "object"
+            },
+            "resource_id": {
+              "maxLength": 128,
+              "minLength": 1,
+              "title": "Resource Id",
+              "type": "string"
+            },
+            "resource_version": {
+              "minimum": 1,
+              "title": "Resource Version",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "event_type",
+            "resource_id",
+            "resource_version",
+            "idempotency_key",
+            "payload"
+          ],
+          "title": "SyncEvent",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/ArtifactDescriptor"
+          },
+          "maxItems": 100,
+          "title": "Artifacts",
+          "type": "array"
+        },
+        "device_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Device Id",
+          "type": "string"
+        },
+        "events": {
+          "items": {
+            "$ref": "#/$defs/SyncEvent"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Events",
+          "type": "array"
+        },
+        "protocol_version": {
+          "const": "2026-07-01",
+          "default": "2026-07-01",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "tenant_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Tenant Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tenant_id",
+        "device_id",
+        "events"
+      ],
+      "title": "SyncEnvelope",
+      "type": "object"
+    },
+    "WebhookEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_type": {
+          "maxLength": 100,
+          "minLength": 3,
+          "title": "Event Type",
+          "type": "string"
+        },
+        "occurred_at": {
+          "format": "date-time",
+          "title": "Occurred At",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": true,
+          "title": "Payload",
+          "type": "object"
+        },
+        "protocol_version": {
+          "const": "2026-07-01",
+          "default": "2026-07-01",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "resource_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Resource Id",
+          "type": "string"
+        },
+        "tenant_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Tenant Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tenant_id",
+        "event_type",
+        "resource_id"
+      ],
+      "title": "WebhookEvent",
+      "type": "object"
+    },
+    "WorkerJobEnvelope": {
+      "$defs": {
+        "ArtifactDescriptor": {
+          "additionalProperties": false,
+          "properties": {
+            "artifact_id": {
+              "title": "Artifact Id",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "source_document",
+                "result_json",
+                "markdown",
+                "docx",
+                "preview",
+                "crop",
+                "table",
+                "dataset_export"
+              ],
+              "title": "Kind",
+              "type": "string"
+            },
+            "media_type": {
+              "maxLength": 255,
+              "minLength": 1,
+              "title": "Media Type",
+              "type": "string"
+            },
+            "sha256": {
+              "pattern": "^[a-f0-9]{64}$",
+              "title": "Sha256",
+              "type": "string"
+            },
+            "size_bytes": {
+              "minimum": 0,
+              "title": "Size Bytes",
+              "type": "integer"
+            },
+            "storage_key": {
+              "anyOf": [
+                {
+                  "maxLength": 1024,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Storage Key"
+            }
+          },
+          "required": [
+            "kind",
+            "sha256",
+            "size_bytes",
+            "media_type"
+          ],
+          "title": "ArtifactDescriptor",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "allowed_outputs": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Allowed Outputs",
+          "type": "array"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "job_id": {
+          "title": "Job Id",
+          "type": "string"
+        },
+        "protocol_version": {
+          "const": "2026-07-01",
+          "default": "2026-07-01",
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "settings": {
+          "additionalProperties": true,
+          "title": "Settings",
+          "type": "object"
+        },
+        "source": {
+          "$ref": "#/$defs/ArtifactDescriptor"
+        },
+        "tenant_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Tenant Id",
+          "type": "string"
+        },
+        "workflow": {
+          "enum": [
+            "text_recognition",
+            "layout_parsing",
+            "table_extraction",
+            "vl_processing"
+          ],
+          "title": "Workflow",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tenant_id",
+        "workflow",
+        "source",
+        "expires_at"
+      ],
+      "title": "WorkerJobEnvelope",
+      "type": "object"
+    }
+  }
+}

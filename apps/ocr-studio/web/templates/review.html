@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block scripts %}<script src="/static/review.js?v={{ asset_versions.get('review.js', '1') }}" type="module"></script>{% endblock %}
+
+{% block main %}
+<section class="page-hero compact-hero">
+  <p class="eyebrow">Evidence review workspace</p>
+  <h1>Correct the reconstruction, <em>never the evidence.</em></h1>
+  <p>Inspect source geometry and OCR confidence beside the effective teacher-approved text. Every correction is an attributable overlay with an audit history.</p>
+</section>
+
+<section class="review-control glass-card" aria-labelledby="review-control-title">
+  <div><p class="panel-kicker"><span>01</span><span>Select evidence</span></p><h2 id="review-control-title">Completed paper</h2></div>
+  <label for="review-history">History record <select id="review-history"><option value="">Choose a completed OCR run</option></select></label>
+  <fieldset class="review-filters"><legend>Confidence overlay</legend>
+    <label><input type="checkbox" data-band="high" checked> High</label>
+    <label><input type="checkbox" data-band="review" checked> Review</label>
+    <label><input type="checkbox" data-band="low" checked> Low</label>
+    <label><input type="checkbox" data-band="unavailable" checked> Unavailable</label>
+  </fieldset>
+  <fieldset class="review-filters"><legend>Evidence type</legend>
+    <label><input type="checkbox" data-evidence-type="text" checked> Text</label>
+    <label><input type="checkbox" data-evidence-type="question" checked> Questions</label>
+    <label><input type="checkbox" data-evidence-type="marks" checked> Marks</label>
+    <label><input type="checkbox" data-evidence-type="table" checked> Tables</label>
+    <label><input type="checkbox" data-evidence-type="figure" checked> Figures</label>
+    <label><input type="checkbox" data-evidence-type="unmapped" checked> Unmapped</label>
+  </fieldset>
+  <div class="review-toolbar" aria-label="Review navigation">
+    <button id="review-prev" class="quiet-button" type="button">Previous page</button>
+    <span id="review-page-label">Page 0 of 0</span>
+    <button id="review-next" class="quiet-button" type="button">Next page</button>
+    <label for="review-source-mode">Source mode <select id="review-source-mode"><option value="page">Full page</option><option value="question">Question crop</option></select></label>
+    <label for="review-question">Question <select id="review-question"><option value="">Choose a question</option></select></label>
+    <label for="review-zoom">Zoom <input id="review-zoom" type="range" min="75" max="200" step="25" value="100"><output id="review-zoom-output">100%</output></label>
+    <a id="review-download-markdown" class="quiet-button hidden" href="#">Effective Markdown</a>
+    <a id="review-download-json" class="quiet-button hidden" href="#">Effective JSON</a>
+    <a id="review-download-docx" class="quiet-button hidden" href="#">Effective DOCX</a>
+  </div>
+  <p id="review-status" class="analysis-status" role="status" aria-live="polite">Choose a paper to load its immutable OCR evidence.</p>
+</section>
+
+<section id="review-workspace" class="review-workspace hidden" aria-label="Side-by-side evidence review">
+  <section class="review-source glass-card" aria-labelledby="review-source-title">
+    <div class="analysis-heading"><h2 id="review-source-title">Watermarked source</h2><span class="status-pill">Local History</span></div>
+    <div id="review-source-stage" class="review-source-stage" tabindex="0" aria-describedby="review-source-help">
+      <img id="review-source-image" alt="Watermarked local source page">
+      <div id="review-overlay" class="confidence-overlay" aria-label="Selectable confidence regions"></div>
+    </div>
+    <p id="review-source-help">Select a colored evidence region or use the issue list. Pattern and text labels supplement color.</p>
+  </section>
+  <section class="review-reconstruction glass-card" aria-labelledby="review-reconstruction-title">
+    <div class="analysis-heading"><h2 id="review-reconstruction-title">Effective reconstruction</h2><span id="review-effective-count" class="status-pill">0 approved corrections</span></div>
+    <div id="review-lines" class="review-lines" aria-label="Page-ordered reconstructed OCR lines"></div>
+  </section>
+</section>
+
+<section class="review-lower-grid">
+  <section class="glass-card" aria-labelledby="correction-title">
+    <p class="panel-kicker"><span>02</span><span>Teacher overlay</span></p><h2 id="correction-title">Manual correction</h2>
+    <form id="correction-form">
+      <label for="correction-target-kind">Correction level <select id="correction-target-kind"><option value="line">OCR line</option><option value="block">OCR block</option><option value="question">Question text</option><option value="marks">Question marks</option><option value="table_cell">Table cell</option><option value="reconstructed_text">Whole reconstruction</option></select></label>
+      <label for="correction-line-id">Target ID <input id="correction-line-id" required placeholder="Select a line, or enter a question/cell ID"></label>
+      <label for="correction-original">Immutable OCR text <textarea id="correction-original" rows="3" readonly></textarea></label>
+      <label for="correction-replacement">Corrected text <textarea id="correction-replacement" rows="4" required></textarea></label>
+      <label for="correction-reason">Reason <input id="correction-reason" maxlength="1000" required placeholder="Describe the evidence for this correction"></label>
+      <label for="correction-status">Review state <select id="correction-status"><option value="draft">Draft</option><option value="reviewed">Reviewed</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></label>
+      <button class="run-button" type="submit">Save correction overlay</button>
+    </form>
+  </section>
+  <section class="glass-card" aria-labelledby="issues-title">
+    <p class="panel-kicker"><span>03</span><span>Screen-reader equivalent</span></p><h2 id="issues-title">Evidence issues</h2>
+    <p id="issues-summary">Confidence and correction issues appear in page order.</p>
+    <ol id="review-issues" class="review-issues"></ol>
+  </section>
+  <section class="glass-card" aria-labelledby="audit-title">
+    <p class="panel-kicker"><span>04</span><span>Append-only history</span></p><h2 id="audit-title">Correction audit</h2>
+    <ol id="review-audit" class="audit-list"></ol>
+  </section>
+</section>
+{% endblock %}

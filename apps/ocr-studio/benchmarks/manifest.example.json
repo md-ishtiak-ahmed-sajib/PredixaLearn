@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "metadata": {
+    "dataset_name": "Replace with permission-cleared dataset name",
+    "license_or_permission": "Record permission before publishing results",
+    "hardware": "Record CPU/GPU and driver versions",
+    "software": "Record PredixaLearn, PaddleOCR, and model versions"
+  },
+  "cases": [
+    {
+      "case_id": "synthetic-judge-demo",
+      "category": "synthetic regression fixture",
+      "expected_evidence": "../tests/fixtures/education/judge-demo.expected.json",
+      "text": "",
+      "question_numbers": ["1(a)", "1(b)", "2(a)", "2(b)", "3(a)", "3(b)", "4(a)", "4(b)"],
+      "reading_order": [],
+      "features": {"tables": 1, "figures": 2, "equations": 2}
+    }
+  ]
+}

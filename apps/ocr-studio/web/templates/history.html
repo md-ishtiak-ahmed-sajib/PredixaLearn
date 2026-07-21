@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}OCR History · PredixaLearn{% endblock %}
+{% block scripts %}<script type="module" src="/static/history.js?v={{ asset_versions.get('history.js', '1') }}"></script>{% endblock %}
+
+{% block main %}
+  <section class="page-hero compact-hero history-hero">
+    <div><p class="eyebrow">Local result archive</p><h1>Review, organize, and reuse your work.</h1><p>Search complete outputs, inspect quality, export portable archives, or restore settings for another run.</p></div>
+    <div class="history-hero-actions">
+      <button id="import-history" class="secondary-button" type="button">Import archive</button>
+      <input id="import-file" type="file" accept=".zip,application/zip" hidden>
+      <button id="clear-history" class="danger-button" type="button">Clear history</button>
+    </div>
+  </section>
+
+  <section class="institution-sync-panel" aria-labelledby="institution-sync-title">
+    <div>
+      <p class="eyebrow">Optional institution connection</p>
+      <h2 id="institution-sync-title">Share only the History records you select.</h2>
+      <p id="institution-sync-status" role="status">Checking institution enrollment…</p>
+    </div>
+    <details>
+      <summary>Enroll this device</summary>
+      <form id="institution-enroll-form">
+        <label><span>Institution service URL</span><input id="institution-url" type="url" placeholder="https://predixalearn.example.edu" required></label>
+        <label><span>One-time enrollment token</span><input id="institution-token" type="password" minlength="32" autocomplete="one-time-code" required></label>
+        <button class="secondary-button" type="submit">Enroll securely</button>
+      </form>
+      <p class="field-help">The device credential is stored in Windows Credential Manager. Existing History is never uploaded during enrollment.</p>
+    </details>
+    <label class="institution-preview-option"><input id="include-institution-previews" type="checkbox"> Include up to five watermarked page previews as explicitly approved review evidence</label>
+    <button id="sync-institution-now" class="secondary-button" type="button" disabled>Sync queued records</button>
+  </section>
+
+  <section class="history-panel" aria-labelledby="history-title">
+    <h2 id="history-title" class="sr-only">History records</h2>
+    <div class="history-toolbar">
+      <label class="search-field"><span>Search filenames</span><input id="history-search" type="search" maxlength="200" placeholder="Search filenames"></label>
+      <label><span>Workflow</span><select id="workflow-filter"><option value="">All workflows</option><option value="text_recognition">Document OCR</option><option value="layout_parsing">Layout diagnostics</option><option value="table_extraction">Table-focused</option><option value="vl_processing">Vision-Language</option></select></label>
+      <label><span>Status</span><select id="status-filter"><option value="">All statuses</option><option value="completed">Completed</option><option value="failed">Failed</option><option value="processing">Processing</option><option value="pending">Pending</option><option value="cancelled">Cancelled</option></select></label>
+      <label><span>Pinned</span><select id="pinned-filter"><option value="">All records</option><option value="true">Pinned only</option><option value="false">Unpinned only</option></select></label>
+      <label><span>From</span><input id="created-from" type="date"></label>
+      <label><span>To</span><input id="created-to" type="date"></label>
+      <label><span>Sort</span><select id="sort-filter"><option value="created_at">Created date</option><option value="input_name">Filename</option><option value="duration">Duration</option><option value="quality">Quality</option></select></label>
+      <label><span>Order</span><select id="order-filter"><option value="desc">Newest / highest</option><option value="asc">Oldest / lowest</option></select></label>
+      <button id="apply-filters" class="secondary-button" type="button">Apply filters</button>
+    </div>
+
+    <div class="history-summary">
+      <span id="history-count">Loading history…</span>
+      <span class="local-note"><span aria-hidden="true">●</span> Stored only on this PC</span>
+    </div>
+    <div id="bulk-actions" class="bulk-actions hidden" role="region" aria-label="Selected History actions">
+      <span id="selected-count">0 selected</span>
+      <button id="export-selected" class="secondary-button" type="button">Export selected</button>
+      <button id="queue-institution" class="secondary-button" type="button">Queue for institution</button>
+      <button id="delete-selected" class="danger-button" type="button">Delete selected</button>
+      <button id="clear-selection" class="quiet-button" type="button">Clear selection</button>
+    </div>
+    <div id="history-error" class="callout error-callout hidden" role="alert"></div>
+    <div id="history-list" class="history-list" aria-live="polite"></div>
+    <div id="history-empty" class="empty-history hidden"><span aria-hidden="true">▦</span><h2>No matching scans</h2><p>Completed and failed OCR attempts will appear here.</p><a class="secondary-button" href="/">Process a document</a></div>
+    <div class="pagination"><button id="previous-page" class="quiet-button" type="button">Previous</button><span id="page-label"></span><button id="next-page" class="quiet-button" type="button">Next</button></div>
+  </section>
+
+  <dialog id="history-detail" class="history-dialog" aria-labelledby="detail-title">
+    <div class="dialog-heading"><div><p class="eyebrow">Saved OCR result</p><h2 id="detail-title">Result</h2><p id="detail-meta" class="detail-meta"></p></div><button id="close-detail" class="quiet-button" type="button" aria-label="Close result">Close</button></div>
+    <dl id="detail-quality" class="quality-summary hidden" aria-label="OCR quality summary"></dl>
+    <div id="detail-quality-details" class="quality-details hidden"></div>
+    <div class="detail-actions">
+      <button id="pin-result" class="secondary-button" type="button">Pin</button>
+      <button id="copy-result" class="secondary-button" type="button">Copy output</button>
+      <button id="rerun-result" class="secondary-button" type="button">Run again</button>
+      <button id="reveal-result" class="secondary-button" type="button">Reveal folder</button>
+      <a id="download-primary" class="secondary-button" href="#">Download output</a>
+      <a id="download-markdown" class="secondary-button" href="#">Markdown</a>
+      <a id="download-docx" class="secondary-button" href="#">DOCX</a>
+      <a id="download-json" class="secondary-button" href="#">JSON</a>
+    </div>
+    <div id="detail-table-downloads" class="table-downloads hidden" aria-label="Table downloads"></div>
+    <p id="legacy-explanation" class="callout hidden"></p>
+    <h3>Readable output</h3><pre id="primary-output" class="detail-output" tabindex="0"></pre>
+    <details><summary>Complete JSON result</summary><pre id="raw-output" class="detail-output" tabindex="0"></pre></details>
+  </dialog>
+
+  <dialog id="confirm-dialog" class="confirm-dialog" aria-labelledby="confirm-title">
+    <h2 id="confirm-title">Confirm action</h2>
+    <p id="confirm-message"></p>
+    <div><button id="confirm-cancel" class="secondary-button" type="button">Cancel</button><button id="confirm-accept" class="danger-button" type="button">Confirm</button></div>
+  </dialog>
+{% endblock %}

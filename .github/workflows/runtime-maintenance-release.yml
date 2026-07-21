@@ -1,0 +1,78 @@
+name: Publish signed runtime maintenance manifest
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing GitHub Release tag containing tested runtime artifacts
+        required: true
+        type: string
+      minimum_app_version:
+        description: Minimum PredixaLearn version accepted by the runtime release
+        required: true
+        default: "1.1.0"
+        type: string
+      components_file:
+        description: Reviewed component metadata file, relative to repository root
+        required: true
+        default: tooling/release/runtime-update-components.json
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  validate-and-publish:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install Python dependencies
+        working-directory: apps/ocr-studio
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+      - name: Install browser assets
+        run: |
+          npm ci
+          npm run assets:sync
+          npm run vendor
+          npm run assets:verify
+          npm run typecheck
+      - name: Validate OCR runtime and browser behavior
+        working-directory: apps/ocr-studio
+        run: |
+          python -m ruff check app tests run.py
+          python -m pytest -q
+          python -m pip_audit -r requirements.txt
+      - name: Run browser and accessibility smoke tests
+        env:
+          PREDIXALEARN_PYTHON: python
+        run: |
+          npx playwright install chromium
+          npm run test:ocr
+      - name: Build and sign immutable manifest
+        shell: pwsh
+        env:
+          PREDIXALEARN_UPDATE_SIGNING_KEY: ${{ secrets.PREDIXALEARN_UPDATE_SIGNING_KEY }}
+        run: |
+          if (-not (Test-Path "${{ inputs.components_file }}")) { throw "Reviewed component metadata is missing." }
+          python apps/ocr-studio/scripts/build_update_manifest.py `
+            --release-tag "${{ inputs.release_tag }}" `
+            --minimum-app-version "${{ inputs.minimum_app_version }}" `
+            --components "${{ inputs.components_file }}" `
+            --output "release-manifest/predixalearn-update-manifest.json" `
+            --signature-output "release-manifest/predixalearn-update-manifest.json.sig"
+      - name: Publish signed manifest to the selected release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ inputs.release_tag }}" release-manifest/predixalearn-update-manifest.json release-manifest/predixalearn-update-manifest.json.sig --clobber

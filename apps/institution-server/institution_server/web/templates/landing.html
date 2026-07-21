@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PredixaLearn Institution Platform</title>
+  <link rel="stylesheet" href="/static/portal.css">
+</head>
+<body>
+  <main class="shell landing">
+    <p class="eyebrow">Institution-controlled education intelligence</p>
+    <h1>PredixaLearn Institution Platform</h1>
+    <p>Search approved OCR evidence, review collaboratively, manage curriculum and rubrics, and connect teacher-approved outcomes to your LMS.</p>
+    {% if oidc_ready %}<a class="primary" href="/auth/login">Sign in with institution SSO</a>{% else %}<p class="notice">OIDC is not configured in this development instance. API clients can use a test token.</p>{% endif %}
+    <p><a href="/docs">API documentation</a> · Version {{ version }}</p>
+  </main>
+</body>
+</html>

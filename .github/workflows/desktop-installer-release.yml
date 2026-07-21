@@ -1,0 +1,85 @@
+name: Publish signed PredixaLearn desktop installer
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing GitHub Release tag containing the tested PredixaLearn runtime ZIP
+        required: true
+        type: string
+      runtime_asset:
+        description: Tested runtime ZIP asset name already attached to the release
+        required: true
+        default: PredixaLearn-runtime.zip
+      version:
+        description: Windows installer version
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-sign-and-publish:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install and verify application dependencies
+        working-directory: apps/ocr-studio
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt -r ../../installer/requirements-desktop-bootstrap.txt
+          python -m ruff check app tests run.py
+          python -m pytest -q
+          python -m pip_audit -r requirements.txt
+      - name: Verify browser application
+        env:
+          PREDIXALEARN_PYTHON: python
+        run: |
+          npm ci
+          npm run assets:sync
+          npm run vendor
+          npm run assets:verify
+          npm run typecheck
+          npx playwright install chromium
+          npm run test:ocr
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress --yes
+      - name: Download tested runtime bundle
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          New-Item -ItemType Directory -Force -Path release-runtime | Out-Null
+          gh release download "${{ inputs.release_tag }}" --pattern "${{ inputs.runtime_asset }}" --dir release-runtime
+      - name: Build signed desktop manifest and installer
+        shell: pwsh
+        env:
+          PREDIXALEARN_UPDATE_SIGNING_KEY: ${{ secrets.PREDIXALEARN_UPDATE_SIGNING_KEY }}
+          WINDOWS_CODESIGN_PFX_BASE64: ${{ secrets.WINDOWS_CODESIGN_PFX_BASE64 }}
+          WINDOWS_CODESIGN_PFX_PASSWORD: ${{ secrets.WINDOWS_CODESIGN_PFX_PASSWORD }}
+          WINDOWS_CODESIGN_TIMESTAMP_URL: ${{ secrets.WINDOWS_CODESIGN_TIMESTAMP_URL }}
+        run: |
+          $runtime = Resolve-Path "release-runtime/${{ inputs.runtime_asset }}"
+          $manifestUrl = "https://github.com/${{ github.repository }}/releases/download/${{ inputs.release_tag }}/predixalearn-desktop-manifest.json"
+          $runtimeUrl = "https://github.com/${{ github.repository }}/releases/download/${{ inputs.release_tag }}/${{ inputs.runtime_asset }}"
+          python installer/scripts/build_desktop_manifest.py --release-tag "${{ inputs.release_tag }}" --runtime-url $runtimeUrl --runtime $runtime --output "installer/builds/release/predixalearn-desktop-manifest.json" --signature-output "installer/builds/release/predixalearn-desktop-manifest.json.sig"
+          powershell -NoProfile -ExecutionPolicy Bypass -File installer/scripts/build_desktop_installer.ps1 -OutputDirectory "installer/builds/release" -Version "${{ inputs.version }}" -RuntimeManifestUrl $manifestUrl -PythonPath python -Sign
+      - name: Publish signed desktop installer and manifest
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $installerFiles = @(Get-ChildItem -LiteralPath "installer/builds/release" -File -Filter "PredixaLearn-Setup-${{ inputs.version }}*" | Select-Object -ExpandProperty FullName)
+          if ($installerFiles.Count -lt 2) { throw "The disk-spanning installer payload is incomplete." }
+          gh release upload "${{ inputs.release_tag }}" $installerFiles installer/builds/release/predixalearn-desktop-manifest.json installer/builds/release/predixalearn-desktop-manifest.json.sig --clobber

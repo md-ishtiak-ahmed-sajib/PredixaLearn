@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PredixaLearn Teacher Portal</title>
+  <link rel="stylesheet" href="/static/portal.css">
+  <script type="module" src="/static/portal.js"></script>
+</head>
+<body>
+  <header class="topbar"><div><strong>PredixaLearn</strong><small>Institution Platform</small></div><form action="/auth/logout" method="post"><button>Sign out</button></form></header>
+  <main class="shell">
+    <section class="hero"><p class="eyebrow">Teacher workspace</p><h1>Evidence you can search, review, and verify.</h1><p id="identity" role="status">Loading institution context…</p></section>
+    <nav class="tabs" aria-label="Institution tools">
+      <button data-view="archive" aria-current="page">Archive</button>
+      <button data-view="reviews">Reviews</button>
+      <button data-view="curriculum">Curriculum &amp; rubrics</button>
+      <button data-view="answers">Answer scripts</button>
+      <button data-view="accessibility">Accessibility</button>
+      <button data-view="datasets">Datasets</button>
+    </nav>
+    <section class="panel" id="archive-view">
+      <form id="search-form" class="filter-grid">
+        <label>Search authorized evidence<input id="search-query" type="search" maxlength="1000"></label>
+        <label>Course ID<input id="search-course" maxlength="128"></label>
+        <label>Status<input id="search-status-filter" maxlength="64" placeholder="indexed"></label>
+        <label>Resource types<input id="search-types" maxlength="500" placeholder="archive_document, learning_objective"></label>
+        <label class="check"><input id="search-semantic" type="checkbox"> Tenant-local semantic ranking</label>
+        <button class="primary">Search</button>
+      </form>
+      <p id="search-status" role="status"></p><div id="search-results" class="cards"></div>
+    </section>
+    <section class="panel hidden" id="reviews-view"><h2>Review queue</h2><div id="review-results" class="cards"></div></section>
+    <section class="panel hidden" id="curriculum-view"><h2>Curriculum versions and rubrics</h2><div id="curriculum-results" class="cards"></div></section>
+    <section class="panel hidden" id="answers-view"><h2>Answer scripts</h2><p>Automatic final grading is disabled. Teacher approval is required before LMS return.</p><div id="answer-results" class="cards"></div></section>
+    <section class="panel hidden" id="accessibility-view"><h2>Figure accessibility</h2><p>Generated descriptions remain drafts until a human reviewer approves them.</p><div id="accessibility-results" class="cards"></div></section>
+    <section class="panel hidden" id="datasets-view"><h2>Verified datasets</h2><p>Dataset release requires two independent verified reviews for every item.</p><div id="dataset-results" class="cards"></div></section>
+    <p id="portal-status" class="notice hidden" role="status"></p>
+  </main>
+  <dialog id="review-dialog" aria-labelledby="review-dialog-title">
+    <form id="review-action-form" method="dialog">
+      <h2 id="review-dialog-title">Review action</h2>
+      <p id="review-dialog-context"></p>
+      <label>Comment or rationale<textarea id="review-text" required maxlength="5000"></textarea></label>
+      <div class="dialog-actions"><button type="button" data-close-dialog>Cancel</button><button class="primary" value="submit">Save</button></div>
+    </form>
+  </dialog>
+</body>
+</html>

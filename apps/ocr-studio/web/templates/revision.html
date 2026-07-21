@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block scripts %}<script src="/static/revision.js?v={{ asset_versions.get('revision.js', '1') }}" type="module"></script>{% endblock %}
+
+{% block main %}
+<section class="page-hero compact-hero"><p class="eyebrow">Revision pack preview</p><h1>Teacher-approved practice, <em>with provenance.</em></h1><p>Standalone mode provides a teacher preview and export surface only. Student accounts and cohort delivery require institution SSO.</p></section>
+<section class="revision-layout">
+  <aside class="glass-card revision-controls"><p class="panel-kicker"><span>01</span><span>Teacher authoring</span></p><h2>Create a revision pack</h2><form id="revision-form"><label>Title <input id="revision-title" required maxlength="256"></label><p><strong>Language:</strong> English</p><input id="revision-language" type="hidden" value="en"><label>Approved question-bank item IDs <textarea id="revision-items" rows="7" placeholder="One approved item ID per line"></textarea></label><label>Teacher introduction <textarea id="revision-introduction" rows="5"></textarea></label><label>Status <select id="revision-status"><option value="draft">Draft</option><option value="reviewed">Reviewed</option><option value="approved">Approved for students</option></select></label><button class="run-button" type="submit">Save revision pack</button></form><p id="revision-status-message" role="status" aria-live="polite">Only approved English packs appear in the student-safe preview.</p></aside>
+  <section class="glass-card" aria-labelledby="revision-packs-title"><div class="analysis-heading"><div><p class="panel-kicker"><span>02</span><span>Student-safe fields only</span></p><h2 id="revision-packs-title">Approved pack preview</h2></div><button id="revision-refresh" class="secondary-button" type="button">Refresh</button></div><div id="revision-packs" class="revision-packs"></div></section>
+</section>
+{% endblock %}

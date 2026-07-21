@@ -1,0 +1,9 @@
+{
+  "fixture_id": "predixalearn-judge-demo-v1",
+  "license": "Original PredixaLearn synthetic material; redistributable for regression testing.",
+  "question_numbers": ["1(a)", "1(b)", "2(a)", "2(b)", "3(a)", "3(b)", "4(a)", "4(b)"],
+  "explicit_marks": {"1(a)": 5, "1(b)": 5, "2(a)": 6, "2(b)": 4, "3(a)": 8, "3(b)": 6, "4(a)": 6, "4(b)": 6},
+  "features": {"tables": 1, "figures": 2, "equations": 2},
+  "scan_variants": ["page 2 has a 0.7 degree rotation", "mixed text, table, equation, and diagram content"],
+  "limitations": "Expected evidence is a regression target, not a claim of fixed OCR accuracy across hardware or model versions."
+}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}About &amp; Privacy &middot; PredixaLearn{% endblock %}
+{% block scripts %}<script src="/static/tips.js?v={{ asset_versions.get('tips.js', '1') }}" defer></script>{% endblock %}
+
+{% block main %}
+  <section class="page-hero compact-hero">
+    <p class="eyebrow">About, privacy, and operating guide</p>
+    <h1>Evidence stays local. Decisions stay reviewable.</h1>
+    <p>Convert an exam paper first, inspect source-linked OCR evidence, then optionally request GPT suggestions with explicit consent.</p>
+  </section>
+
+  <div class="tips-layout">
+    <aside class="tips-nav" aria-label="Help topics">
+      <label for="tips-search">Search help</label>
+      <input id="tips-search" type="search" placeholder="Try &quot;tables&quot; or &quot;quality&quot;">
+      <nav>
+        <a href="#quick-start">Quick start</a>
+        <a href="#workflows">Workflows</a>
+        <a href="#troubleshooting">Troubleshooting</a>
+        <a href="#privacy">Privacy and optional GPT</a>
+        <a href="#evidence">Evidence and review</a>
+        <a href="#advanced">Advanced operation</a>
+        <a href="#service-health">Service health</a>
+      </nav>
+      <p id="tips-count" aria-live="polite"></p>
+    </aside>
+
+    <section id="tips-content" class="tips-content" aria-label="OCR help">
+      <article id="quick-start" class="info-card help-section" data-search="quick start exam paper scan upload convert analyze download">
+        <p class="card-number">01 / QUICK START</p>
+        <h2>Process a document in four steps</h2>
+        <ol class="quick-steps">
+          <li><strong>Choose Exam Paper.</strong><span>It is the recommended complete-document workflow for question papers.</span></li>
+          <li><strong>Add the original PDF or clearest scan.</strong><span>Prefer upright, sharp pages around 300 DPI.</span></li>
+          <li><strong>Open Advanced only if needed.</strong><span>Choose a profile, processing strategy, or watermark phrase. This release processes English documents only.</span></li>
+          <li><strong>Convert and review.</strong><span>Read Preview and Warnings, then inspect source-linked questions in Analyze before downloading.</span></li>
+        </ol>
+        <p class="callout">Limits: {{ max_upload_mb }} MB per upload, {{ max_pdf_pages }} PDF pages or image frames, and {{ "%.0f"|format(max_image_megapixels) }} megapixels per rendered page.</p>
+      </article>
+
+      <article id="workflows" class="info-card help-section" data-search="workflow document vision language table layout exam paper judge demo">
+        <p class="card-number">02 / WORKFLOWS</p>
+        <h2>Start with the task, not the technical mode</h2>
+        <dl class="workflow-guide">
+          <div><dt>Exam Paper</dt><dd>Recommended for past papers. It uses the complete local document workflow with question, mark, and source-evidence retention.</dd></div>
+          <div><dt>Judge Demo</dt><dd>Runs PredixaLearn's original synthetic paper through the same local queue; it is a reproducible demonstration, not a benchmark claim.</dd></div>
+          <div><dt>General Document</dt><dd>For reports and study notes that still need local structured exports.</dd></div>
+          <div><dt>Table-focused</dt><dd>Keeps the full bundle while emphasizing verified CSV and XLSX files.</dd></div>
+          <div><dt>Layout diagnostics</dt><dd>For specialist inspection of reading order and page geometry.</dd></div>
+          <div><dt>Vision-Language</dt><dd>For unusually complex formulas, diagrams, or mixed visual content; normally slower.</dd></div>
+        </dl>
+      </article>
+
+      <article id="troubleshooting" class="info-card help-section" data-search="troubleshooting blurry failed warning table formula docx quality">
+        <p class="card-number">03 / TROUBLESHOOTING</p>
+        <h2>Symptom, likely cause, next action</h2>
+        <div class="troubleshooting-list">
+          <details><summary>Text is missing or inaccurate</summary><p>Confirm that the document is in English, use the original PDF, improve lighting and focus, and try the Exam profile only for question papers.</p></details>
+          <details><summary>A table is marked Needs review</summary><p>The grid did not pass source-coverage or plausibility checks. Use the visible OCR evidence and crop, or rescan more squarely; CSV/XLSX are withheld rather than guessed.</p></details>
+          <details><summary>DOCX is partial or unavailable</summary><p>Download Markdown and JSON first, then check Warnings and Service health for LibreOffice or conversion details.</p></details>
+          <details><summary>Processing appears slow</summary><p>The {{ device }} queue runs one GPU inference job at a time. Large PDFs, adaptive retries, DOCX generation, and local render validation can take several minutes.</p></details>
+        </div>
+      </article>
+
+      <article id="privacy" class="info-card help-section" data-search="privacy local history delete upload archive output openai gpt consent cloud">
+        <p class="card-number">04 / PRIVACY</p>
+        <h2>OCR is local. GPT analysis is opt-in.</h2>
+        <ul>
+          <li>Original uploads are deleted after completion, failure, or cancellation.</li>
+          <li>History retains result bundles plus bounded, watermarked page previews and question crops—not the original source document.</li>
+          <li>Without consent, question segmentation, History, exports, and local review never contact OpenAI.</li>
+          <li>With consent, PredixaLearn sends only bounded selected question text, page/line references, marks, and OCR confidence. It never sends the source file, images, local paths, or all History.</li>
+          <li><code>OPENAI_API_KEY</code> is read at runtime only. It is never shown in the browser or stored in History.</li>
+          <li>Deleting a History record removes its archive but does not remove the latest named export.</li>
+          <li>Run again restores settings and always asks you to choose the source file again.</li>
+        </ul>
+      </article>
+
+      <article id="evidence" class="info-card help-section" data-search="evidence source line page confidence teacher review question analysis gpt">
+        <p class="card-number">05 / EVIDENCE AND REVIEW</p>
+        <h2>Every suggestion must lead back to OCR evidence</h2>
+        <p>Analyze segments page-ordered OCR lines deterministically. Each question keeps its display number, source page, line IDs, geometry, explicit or inferred marks, and OCR confidence. GPT suggestions are validated locally; unknown questions, pages, or line IDs are rejected.</p>
+        <p>Teacher edits override AI fields, are retained as separate local review data, and are appended to an audit log. Practice suggestions are always marked for teacher review. Historical patterns are revision priorities—not predictions of future exam questions.</p>
+      </article>
+
+      <article id="advanced" class="info-card help-section" data-search="advanced figures formula correction watermark table libreoffice markdown json">
+        <p class="card-number">06 / ADVANCED</p>
+        <h2>How verification and export work</h2>
+        <details><summary>Figures and screenshots</summary><p>Content figures are cropped with {{ crop_padding_pixels }} pixels of padding and embedded up to the configured {{ max_embedded_images }}-image ceiling. Invalid crops fall back safely and generate a warning.</p></details>
+        <details><summary>Correction and watermark removal</summary><p>Offline correction is conservative and protects names, codes, formulas, URLs, and structured identifiers. Optional removal terms are literal, case-insensitive, and retained as raw evidence in JSON.</p></details>
+        <details><summary>Tables and formulas</summary><p>Only accepted normalized table grids feed Markdown, DOCX, CSV, and XLSX. Unsafe formula OCR remains visible as literal text and is reported for review.</p></details>
+        <details><summary>Output validation</summary><p>DOCX conversion coverage checks content transfer. Project-local LibreOffice then verifies that the document opens and renders; it does not claim the OCR itself is accurate.</p></details>
+      </article>
+
+      <article id="service-health" class="info-card help-section anchor-card" data-search="service health gpu cuda cudnn libreoffice diagnostics ready initializing degraded">
+        <p class="card-number">07 / SERVICE HEALTH</p>
+        <h2>Understand the status badge</h2>
+        <p><strong>Initializing</strong> means you can prepare a file while the OCR engine loads. <strong>Ready</strong> means the requested device and local export toolchain are available. <strong>Degraded</strong> identifies an issue worth correcting, while completed OCR results remain protected.</p>
+        <p id="health-detail" class="callout" role="status">Checking the current runtime...</p>
+      </article>
+
+      <div id="tips-empty" class="empty-history hidden"><span aria-hidden="true">?</span><h2>No matching help topic</h2><p>Try a broader word such as &quot;PDF,&quot; &quot;tables,&quot; or &quot;History.&quot;</p></div>
+    </section>
+  </div>
+{% endblock %}
