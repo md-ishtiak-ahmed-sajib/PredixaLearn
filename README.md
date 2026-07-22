@@ -1,77 +1,3 @@
-# PredixaLearn Monorepo
-
-> **Predict Smarter. Learn Better.**
-
-This repository contains the private, loopback-only Windows OCR studio in
-`apps/ocr-studio/` and the optional institution-controlled platform in
-`apps/institution-server/`. The institutional service never changes the
-standalone app's offline behavior and never uploads existing History
-automatically.
-
-Logo masters and brand metadata live in `packages/brand-assets/`. Runtime data belongs in `%LOCALAPPDATA%\PredixaLearn`, never in source control. The root `run.py`, `setup_env.ps1`, `start_web.bat`, and Writer launcher remain compatibility entry points for the OCR studio.
-
-## Common commands
-
-```powershell
-# Existing local setup and launch commands remain valid.
-.\.venv\Scripts\python.exe .\run.py --no-browser
-.\start_web.bat
-
-# OCR checks from the application directory.
-Set-Location .\apps\ocr-studio
-..\..\.venv\Scripts\python.exe -m pytest -q
-..\..\.venv\Scripts\python.exe -m ruff check .
-
-# Workspace browser checks and shared-brand sync.
-Set-Location ..\..
-npm run assets:sync
-npm run typecheck
-npm run test:ocr
-
-# Optional institution service checks.
-.\.venv\Scripts\python.exe -m pytest -q .\apps\institution-server\tests
-npm run typecheck:institution
-
-# After explicit institution enrollment, claim one signed outbound worker job.
-Set-Location .\apps\ocr-studio
-..\..\.venv\Scripts\python.exe run.py --mode institution-worker --once
-```
-
-See [the OCR studio guide](apps/ocr-studio/README.md) for application-specific commands.
-See [the institution deployment guide](apps/institution-server/README.md) for
-OIDC, PostgreSQL, Redis, object storage, Docker Compose, and Helm configuration.
-
-## Release identity
-
-The signed desktop and maintenance channels use
-`md-ishtiak-ahmed-sajib/PredixaLearn`. Rename the GitHub repository to that
-identity before publishing the first PredixaLearn release; changing the local
-Git remote is intentionally left to the repository owner.
-
-## Installed Windows desktop mode
-
-The signed Windows installer runs PredixaLearn as a local web application in the
-user's existing browser. After the administrator prompt, it automatically
-creates a per-install local certificate, trusts it in the Windows Root store,
-and adds only PredixaLearn's marked hosts entry. No manual hosts-file editing,
-certificate setup, public DNS, Caddy, or browser configuration is required.
-
-The installed shortcut opens:
-
-```text
-https://app.predixalearn.com/
-```
-
-The hostname resolves to `127.0.0.1` on that computer and the service binds
-only to loopback port 443. If port 443 is occupied or local certificate trust
-cannot be verified, setup stops with an actionable repair message; it never
-falls back to insecure HTTP or an alternate port. The tray menu and the
-browser's **Quit PredixaLearn** action use the same graceful shutdown guard.
-
-Development and automated tests continue to use
-`http://127.0.0.1:8000/`. Uninstall removes only PredixaLearn binaries,
-shortcuts, its marked hosts entry, and its generated certificate. User data in
-`%LOCALAPPDATA%\PredixaLearn` is preserved.
 # PredixaLearn
 
 > **Predict Smarter. Learn Better.**
@@ -1168,3 +1094,152 @@ Use [the Codex evidence template](docs/hackathon-codex-evidence.md) to record
 real session IDs, screenshots, tests, failures, and human-review notes. Never
 fabricate contribution claims, benchmark measurements, user feedback, or
 future-exam predictions.
+
+# PredixaLearn Monorepo
+
+> **Predict Smarter. Learn Better.**
+
+This repository contains the private, loopback-only Windows OCR studio in
+`apps/ocr-studio/` and the optional institution-controlled platform in
+`apps/institution-server/`. The institutional service never changes the
+standalone app's offline behavior and never uploads existing History
+automatically.
+
+Logo masters and brand metadata live in `packages/brand-assets/`. Runtime data belongs in `%LOCALAPPDATA%\PredixaLearn`, never in source control. The root `run.py`, `setup_env.ps1`, `start_web.bat`, and Writer launcher remain compatibility entry points for the OCR studio.
+
+## Common commands
+
+```powershell
+# Existing local setup and launch commands remain valid.
+.\.venv\Scripts\python.exe .\run.py --no-browser
+.\start_web.bat
+
+# OCR checks from the application directory.
+Set-Location .\apps\ocr-studio
+..\..\.venv\Scripts\python.exe -m pytest -q
+..\..\.venv\Scripts\python.exe -m ruff check .
+
+# Workspace browser checks and shared-brand sync.
+Set-Location ..\..
+npm run assets:sync
+npm run typecheck
+npm run test:ocr
+
+# Optional institution service checks.
+.\.venv\Scripts\python.exe -m pytest -q .\apps\institution-server\tests
+npm run typecheck:institution
+
+# After explicit institution enrollment, claim one signed outbound worker job.
+Set-Location .\apps\ocr-studio
+..\..\.venv\Scripts\python.exe run.py --mode institution-worker --once
+```
+
+See [the OCR studio guide](apps/ocr-studio/README.md) for application-specific commands.
+See [the institution deployment guide](apps/institution-server/README.md) for
+OIDC, PostgreSQL, Redis, object storage, Docker Compose, and Helm configuration.
+
+## Release identity
+
+The signed desktop and maintenance channels use
+`md-ishtiak-ahmed-sajib/PredixaLearn`. Rename the GitHub repository to that
+identity before publishing the first PredixaLearn release; changing the local
+Git remote is intentionally left to the repository owner.
+
+## Installed Windows desktop mode
+
+The signed Windows installer runs PredixaLearn as a local web application in the
+user's existing browser. After the administrator prompt, it automatically
+creates a per-install local certificate, trusts it in the Windows Root store,
+and adds only PredixaLearn's marked hosts entry. No manual hosts-file editing,
+certificate setup, public DNS, Caddy, or browser configuration is required.
+
+The installed shortcut opens:
+
+```text
+https://app.predixalearn.com/
+```
+
+The hostname resolves to `127.0.0.1` on that computer and the service binds
+only to loopback port 443. If port 443 is occupied or local certificate trust
+cannot be verified, setup stops with an actionable repair message; it never
+falls back to insecure HTTP or an alternate port. The tray menu and the
+browser's **Quit PredixaLearn** action use the same graceful shutdown guard.
+
+Development and automated tests continue to use
+`http://127.0.0.1:8000/`. Uninstall removes only PredixaLearn binaries,
+shortcuts, its marked hosts entry, and its generated certificate. User data in
+`%LOCALAPPDATA%\PredixaLearn` is preserved.
+
+# Running PredixaLearn
+
+Use the root compatibility launchers so local commands remain stable while
+their implementation stays organized under `apps/ocr-studio`:
+
+```powershell
+./setup_env.ps1 -Development
+./start_web.bat
+
+# Start without opening the browser
+./.venv/Scripts/python.exe ./run.py --no-browser
+```
+
+The development launcher waits for `GET /api/v1/health` before opening
+`http://127.0.0.1:8000`. The same server hosts the UI, REST API, static assets,
+and `/docs`.
+
+## Installed Windows desktop
+
+Install the signed `PredixaLearn-Setup-<version>.exe` as administrator. The
+installer performs the local HTTPS setup automatically:
+
+1. It creates a unique local PredixaLearn root and leaf certificate for
+   `app.predixalearn.com`.
+2. It installs the root into the Windows trusted Root store and restricts the
+   generated private-key directory.
+3. It adds one marked hosts entry mapping the hostname to `127.0.0.1`.
+4. It verifies the certificate chain, hostname, key match, trust store, and
+   hosts mapping before completing.
+
+No manual hosts-file editing, certificate import, public domain, Caddy setup,
+or browser configuration is required. The desktop shortcut starts the quiet
+tray host and opens the default browser at
+`https://app.predixalearn.com/` after HTTPS health is ready. The service
+binds only to loopback port 443. A second launch opens the existing healthy
+instance.
+
+If port 443 is already occupied, or trust verification fails, setup stops
+without changing to HTTP or another port. Run the installer **Repair** option
+as administrator after resolving the conflict. A missing runtime or incomplete
+TLS state produces the same repair guidance rather than starting an unsafe
+server.
+
+The tray menu provides **Open PredixaLearn** and **Exit**. The browser also has
+**Quit PredixaLearn**. Both paths refuse to stop while OCR work is active; finish
+or cancel the job first. Uninstall removes only the installed program files,
+shortcut, PredixaLearn-owned hosts entry, and generated certificate. It does not
+remove `%LOCALAPPDATA%\PredixaLearn` output, uploads, History, or logs.
+
+After the first installation, the local desktop app does not need an internet
+connection to run. Internet is required only for downloading a signed runtime
+during an online installation or update.
+
+The first launch after the PredixaLearn rename copies the previous default
+local output, History, and log folders into `%LOCALAPPDATA%\PredixaLearn`.
+The originals remain in place; `.runtime-migration-v2.json` prevents duplicate
+copies on later launches.
+
+Healthy installations report `status: "ready"` only when Paddle's compiled and loaded cuDNN versions match and the pinned project-local LibreOffice renderer passes its version check. A mismatch or missing renderer remains visible as `degraded` and must not be hidden; OCR still runs and a DOCX-rendering failure is reported as a per-result warning.
+
+`setup_env.ps1` also runs `scripts/setup_libreoffice.ps1`. The latter verifies the official LibreOffice 26.2.4 x86-64 MSI checksum and publisher signature, performs a project-local administrative extraction under `.tools`, and smoke-converts a DOCX before promotion. It does not register LibreOffice, edit PATH, create file associations, or use an installed office application.
+
+Stop the server with `Ctrl+C`. Shutdown stops the bounded job executor, releases engine references, and clears the CUDA cache.
+
+Remove regenerable development caches after testing with:
+
+```powershell
+./scripts/clean_caches.ps1
+```
+
+The cleaner is restricted to Python/tool caches, DOCX smoke-test directories, and orphaned staging job directories. It refuses to remove the virtual environment, `.tools` LibreOffice runtime, named outputs, uploads, logs, or persistent History.
+
+After the active environment has passed the complete test and GPU validation suite, stale rollback environments can be removed explicitly with `./scripts/clean_caches.ps1 -RemoveValidatedEnvironmentBackup`. The cleaner runs `pip check` again before accepting that option.
