@@ -4,6 +4,9 @@
 #
 #    pip-compile --extra=azure --extra=s3 --generate-hashes --output-file=requirements.lock pyproject.toml
 #
+# This lock is deployed on Linux. The explicit conditional uvloop entry below
+# preserves uvicorn[standard]'s Linux-only dependency when the lock is refreshed
+# from a Windows development machine.
 alembic==1.18.5 \
     --hash=sha256:06d8ba9d04558022f5395e9317de03d270f3dced49cee01f89fe7a13c26f14bc \
     --hash=sha256:1554982221dd17e9a749b53902407578eb305e453f71999e8c7f0a48389fff8e
@@ -993,6 +996,10 @@ urllib3==2.7.0 \
     # via
     #   botocore
     #   requests
+uvloop==0.22.1 ; sys_platform != "win32" and sys_platform != "cygwin" and platform_python_implementation != "PyPy" \
+    --hash=sha256:6c84bae345b9147082b17371e3dd5d42775bddce91f885499017f4607fdaf39f \
+    --hash=sha256:7b5b1ac819a3f946d3b2ee07f09149578ae76066d70b44df3fa990add49a82e4
+    # via uvicorn
 uvicorn[standard]==0.51.0 \
     --hash=sha256:5d38af6cd620f2ae3849fb44fd4879e0890aa1febe8d47eb355fb45d93fe6a5b \
     --hash=sha256:f6f4b69b657c312f516dd2d268ab9ae6f254b11e4bac504f37b2ab58b24dd0b0
