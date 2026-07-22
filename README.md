@@ -1,4 +1,4 @@
-# PredixaLearn
+# PredixaLearn Monorepo
 
 > **Predict Smarter. Learn Better.**
 
