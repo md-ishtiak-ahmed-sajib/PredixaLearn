@@ -51,7 +51,7 @@ const state = {
 /** @type {Record<string, any>} */
 const elements = {
   tabs: Array.from(document.querySelectorAll(".workflow-tab")),
-  intentTabs: Array.from(document.querySelectorAll(".intent-tab")),
+  intentTabs: Array.from(document.querySelectorAll("input[name='document-intent']")),
   workflowModeTabs: document.querySelector("#workflow-mode-tabs"),
   advancedSettings: document.querySelector("#advanced-settings"),
   documentOptions: document.querySelector("#document-options"),
@@ -150,10 +150,9 @@ function applyWorkflowSelection() {
 function applyDocumentIntent() {
   const advanced = state.documentIntent === "advanced";
   elements.intentTabs.forEach((tab) => {
-    const active = tab.dataset.intent === state.documentIntent;
-    tab.classList.toggle("active", active);
-    tab.setAttribute("aria-selected", String(active));
-    tab.tabIndex = active ? 0 : -1;
+    const active = tab.value === state.documentIntent;
+    tab.checked = active;
+    tab.closest(".intent-option")?.classList.toggle("active", active);
   });
   if (!advanced) {
     state.primaryMode = "document";
@@ -591,19 +590,11 @@ elements.tabs.forEach((tab, index) => {
   });
 });
 
-elements.intentTabs.forEach((tab, index) => {
-  tab.addEventListener("click", () => {
-    state.documentIntent = tab.dataset.intent || "exam";
+elements.intentTabs.forEach((tab) => {
+  tab.addEventListener("change", () => {
+    if (!tab.checked) return;
+    state.documentIntent = tab.value || "exam";
     applyDocumentIntent();
-  });
-  tab.addEventListener("keydown", (event) => {
-    if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(event.key)) return;
-    event.preventDefault();
-    const target = event.key === "Home" ? 0 : event.key === "End" ? elements.intentTabs.length - 1
-      : event.key === "ArrowRight" ? (index + 1) % elements.intentTabs.length
-        : (index - 1 + elements.intentTabs.length) % elements.intentTabs.length;
-    elements.intentTabs[target].focus();
-    elements.intentTabs[target].click();
   });
 });
 

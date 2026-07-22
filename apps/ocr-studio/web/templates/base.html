@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/static/predixalearn-mark-180.png?v={{ asset_versions.get('predixalearn-mark-180.png', '1') }}">
   <title>{% block title %}PredixaLearn &middot; Exam paper intelligence{% endblock %}</title>
   <link rel="stylesheet" href="/static/app.css?v={{ asset_versions.get('app.css', '1') }}">
-  <script src="/static/common.js?v={{ asset_versions.get('common.js', '1') }}" defer></script>
+  <script src="/static/common.js?v={{ asset_versions.get('common.js', '1') }}&nav=3" defer></script>
   <script src="/static/maintenance.js?v={{ asset_versions.get('maintenance.js', '1') }}" defer></script>
   {% if desktop_mode %}<meta name="predixalearn-control-token" content="{{ desktop_control_token }}">
   <script src="/static/desktop.js?v={{ asset_versions.get('desktop.js', '1') }}" defer></script>{% endif %}
@@ -26,31 +26,61 @@
           <small>Predict Smarter. Learn Better.</small>
         </span>
       </a>
-      <nav aria-label="Primary navigation">
+      <button id="nav-toggle" class="nav-toggle" type="button" aria-controls="primary-nav" aria-expanded="false">
+        <span class="nav-toggle-icon" aria-hidden="true"></span>
+        <span class="sr-only">Open navigation</span>
+      </button>
+      <nav id="primary-nav" class="primary-nav" aria-label="Primary navigation">
         <a class="nav-link{% if page == 'home' %} active{% endif %}"{% if page == 'home' %} aria-current="page"{% endif %} href="/">Convert</a>
         <a class="nav-link{% if page == 'analyze' %} active{% endif %}"{% if page == 'analyze' %} aria-current="page"{% endif %} href="/analyze">Analyze</a>
         <a class="nav-link{% if page == 'review' %} active{% endif %}"{% if page == 'review' %} aria-current="page"{% endif %} href="/review">Review</a>
         <a class="nav-link{% if page == 'history' %} active{% endif %}"{% if page == 'history' %} aria-current="page"{% endif %} href="/history">History</a>
-        <a class="nav-link{% if page == 'teacher' %} active{% endif %}"{% if page == 'teacher' %} aria-current="page"{% endif %} href="/teacher">Teacher</a>
-        <a class="nav-link{% if page == 'revision' %} active{% endif %}"{% if page == 'revision' %} aria-current="page"{% endif %} href="/revision">Revision</a>
-        <a class="nav-link{% if page == 'benchmark' %} active{% endif %}"{% if page == 'benchmark' %} aria-current="page"{% endif %} href="/benchmark">Benchmark</a>
-        <a class="nav-link{% if page == 'tips' %} active{% endif %}"{% if page == 'tips' %} aria-current="page"{% endif %} href="/tips">About &amp; Privacy</a>
-        <a class="nav-link nav-utility" href="/docs">Developer API</a>
-        <button id="maintenance-button" class="maintenance-button" type="button" disabled aria-haspopup="dialog" title="Maintenance requires an internet connection">Maintenance</button>
-        {% if desktop_mode %}<button id="quit-app-button" class="quit-app-button" type="button" aria-haspopup="dialog">Quit app</button>{% endif %}
-        <a id="health-badge" class="health health-checking" href="/tips#service-health">Checking service</a>
+        <details class="nav-group nav-group-teaching">
+          <summary>Teaching</summary>
+          <div class="nav-popover">
+            <a class="nav-link{% if page == 'teacher' %} active{% endif %}"{% if page == 'teacher' %} aria-current="page"{% endif %} href="/teacher">Teacher workspace</a>
+            <a class="nav-link{% if page == 'revision' %} active{% endif %}"{% if page == 'revision' %} aria-current="page"{% endif %} href="/revision">Revision planner</a>
+          </div>
+        </details>
+        <details class="nav-group nav-group-more">
+          <summary id="more-menu-toggle">More</summary>
+          <div class="nav-popover">
+            <a class="nav-link{% if page == 'benchmark' %} active{% endif %}"{% if page == 'benchmark' %} aria-current="page"{% endif %} href="/benchmark">Benchmark</a>
+            <a class="nav-link{% if page == 'tips' %} active{% endif %}"{% if page == 'tips' %} aria-current="page"{% endif %} href="/tips">About &amp; privacy</a>
+            <a class="nav-link nav-utility" href="/docs">Developer API</a>
+            <button id="maintenance-button" class="maintenance-button" type="button" disabled aria-haspopup="dialog" title="Maintenance requires an internet connection">Maintenance</button>
+          </div>
+        </details>
+        <div class="nav-status">
+          <a id="health-badge" class="health health-checking" href="/tips#service-health">Checking service</a>
+          {% if desktop_mode %}<button id="quit-app-button" class="quit-app-button" type="button" aria-haspopup="dialog">Quit app</button>{% endif %}
+        </div>
       </nav>
     </div>
   </header>
 
   <main>{% block main %}{% endblock %}</main>
 
-  <footer>
-    <span>PredixaLearn</span>
-    <span class="footer-separator" aria-hidden="true">&middot;</span>
-    <span>Copyright &copy; 2026 Md Ishtiak Ahmed Sajib</span>
-    <span class="footer-separator" aria-hidden="true">&middot;</span>
-    <span>OCR stays local; optional GPT analysis requires explicit consent.</span>
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div class="footer-brand">
+        <strong>PredixaLearn</strong>
+        <p>Turn exam papers into evidence teachers can review with confidence.</p>
+      </div>
+      <div class="footer-profile">
+        <span class="footer-label">Created by</span>
+        <strong>Md Ishtiak Ahmed Sajib</strong>
+        <span>BSc in Civil Engineering &middot; Barishal Engineering College</span>
+      </div>
+      <div class="footer-contact">
+        <span class="footer-label">Contact</span>
+        <a href="https://wa.me/8801783889301" target="_blank" rel="noopener noreferrer" aria-label="Contact Md Ishtiak Ahmed Sajib on WhatsApp">WhatsApp +880 1783-889301 <span aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+    <div class="site-footer-note">
+      <span>Copyright &copy; 2026 Md Ishtiak Ahmed Sajib</span>
+      <span>OCR stays local; optional GPT analysis requires explicit consent.</span>
+    </div>
   </footer>
 
   <dialog id="maintenance-dialog" class="maintenance-dialog" aria-labelledby="maintenance-title" aria-describedby="maintenance-notice">

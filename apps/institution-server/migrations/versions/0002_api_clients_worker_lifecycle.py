@@ -19,6 +19,18 @@ def _columns(table: str) -> set[str]:
 
 def upgrade() -> None:
     bind = op.get_bind()
+    # Alembic creates ``alembic_version.version_num`` as VARCHAR(32) by
+    # default. This revision identifier is longer, so PostgreSQL must widen
+    # the column before Alembic records this migration as the current head.
+    if bind.dialect.name == "postgresql":
+        op.alter_column(
+            "alembic_version",
+            "version_num",
+            existing_type=sa.String(length=32),
+            type_=sa.String(length=64),
+            existing_nullable=False,
+        )
+
     tables = set(sa.inspect(bind).get_table_names())
     if "api_clients" not in tables:
         op.create_table(

@@ -34,6 +34,30 @@ def _load_components(path: Path) -> list[dict[str, Any]]:
     return components
 
 
+def _load_signing_key(private_pem: str) -> ECC.EccKey:
+    try:
+        key = ECC.import_key(private_pem)
+        if key.curve != "Ed25519" or not key.has_private():
+            raise ValueError("not an Ed25519 private key")
+    except (ValueError, IndexError) as exc:
+        raise SystemExit("PREDIXALEARN_UPDATE_SIGNING_KEY must be an Ed25519 private PEM") from exc
+    return key
+
+
+def _require_matching_public_key(private_key: ECC.EccKey, expected_path: Path) -> None:
+    try:
+        expected_key = ECC.import_key(expected_path.read_bytes())
+        if expected_key.curve != "Ed25519" or expected_key.has_private():
+            raise ValueError("not an Ed25519 public key")
+    except (OSError, ValueError, IndexError) as exc:
+        raise SystemExit("--expected-public-key must contain an Ed25519 public PEM") from exc
+
+    if private_key.public_key().export_key(format="DER") != expected_key.export_key(format="DER"):
+        raise SystemExit(
+            "PREDIXALEARN_UPDATE_SIGNING_KEY does not match the committed maintenance public key"
+        )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--release-tag", required=True)
@@ -42,18 +66,15 @@ def main() -> None:
     parser.add_argument("--signature-output", type=Path, required=True)
     parser.add_argument("--minimum-app-version", required=True)
     parser.add_argument("--expires-days", type=int, default=30)
+    parser.add_argument("--expected-public-key", type=Path, required=True)
     arguments = parser.parse_args()
     if not 1 <= arguments.expires_days <= 90:
         raise SystemExit("--expires-days must be between 1 and 90")
     private_key = os.environ.get("PREDIXALEARN_UPDATE_SIGNING_KEY")
     if not private_key:
         raise SystemExit("PREDIXALEARN_UPDATE_SIGNING_KEY is required")
-    try:
-        key = ECC.import_key(private_key)
-        if key.curve != "Ed25519" or not key.has_private():
-            raise ValueError("not an Ed25519 private key")
-    except (ValueError, IndexError) as exc:
-        raise SystemExit("PREDIXALEARN_UPDATE_SIGNING_KEY must be an Ed25519 private PEM") from exc
+    key = _load_signing_key(private_key)
+    _require_matching_public_key(key, arguments.expected_public_key)
 
     now = datetime.now(UTC).replace(microsecond=0)
     manifest = {

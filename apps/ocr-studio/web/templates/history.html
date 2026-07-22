@@ -9,7 +9,6 @@
     <div class="history-hero-actions">
       <button id="import-history" class="secondary-button" type="button">Import archive</button>
       <input id="import-file" type="file" accept=".zip,application/zip" hidden>
-      <button id="clear-history" class="danger-button" type="button">Clear history</button>
     </div>
   </section>
 
@@ -38,12 +37,17 @@
       <label class="search-field"><span>Search filenames</span><input id="history-search" type="search" maxlength="200" placeholder="Search filenames"></label>
       <label><span>Workflow</span><select id="workflow-filter"><option value="">All workflows</option><option value="text_recognition">Document OCR</option><option value="layout_parsing">Layout diagnostics</option><option value="table_extraction">Table-focused</option><option value="vl_processing">Vision-Language</option></select></label>
       <label><span>Status</span><select id="status-filter"><option value="">All statuses</option><option value="completed">Completed</option><option value="failed">Failed</option><option value="processing">Processing</option><option value="pending">Pending</option><option value="cancelled">Cancelled</option></select></label>
-      <label><span>Pinned</span><select id="pinned-filter"><option value="">All records</option><option value="true">Pinned only</option><option value="false">Unpinned only</option></select></label>
-      <label><span>From</span><input id="created-from" type="date"></label>
-      <label><span>To</span><input id="created-to" type="date"></label>
-      <label><span>Sort</span><select id="sort-filter"><option value="created_at">Created date</option><option value="input_name">Filename</option><option value="duration">Duration</option><option value="quality">Quality</option></select></label>
-      <label><span>Order</span><select id="order-filter"><option value="desc">Newest / highest</option><option value="asc">Oldest / lowest</option></select></label>
       <button id="apply-filters" class="secondary-button" type="button">Apply filters</button>
+      <details class="history-advanced-filters">
+        <summary>More filters</summary>
+        <div>
+          <label><span>Pinned</span><select id="pinned-filter"><option value="">All records</option><option value="true">Pinned only</option><option value="false">Unpinned only</option></select></label>
+          <label><span>From</span><input id="created-from" type="date"></label>
+          <label><span>To</span><input id="created-to" type="date"></label>
+          <label><span>Sort</span><select id="sort-filter"><option value="created_at">Created date</option><option value="input_name">Filename</option><option value="duration">Duration</option><option value="quality">Quality</option></select></label>
+          <label><span>Order</span><select id="order-filter"><option value="desc">Newest / highest</option><option value="asc">Oldest / lowest</option></select></label>
+        </div>
+      </details>
     </div>
 
     <div class="history-summary">
@@ -61,6 +65,11 @@
     <div id="history-list" class="history-list" aria-live="polite"></div>
     <div id="history-empty" class="empty-history hidden"><span aria-hidden="true">▦</span><h2>No matching scans</h2><p>Completed and failed OCR attempts will appear here.</p><a class="secondary-button" href="/">Process a document</a></div>
     <div class="pagination"><button id="previous-page" class="quiet-button" type="button">Previous</button><span id="page-label"></span><button id="next-page" class="quiet-button" type="button">Next</button></div>
+    <details class="history-danger-zone">
+      <summary>History maintenance</summary>
+      <p>Clearing History removes locally stored result records from this computer.</p>
+      <button id="clear-history" class="danger-button" type="button">Clear history</button>
+    </details>
   </section>
 
   <dialog id="history-detail" class="history-dialog" aria-labelledby="detail-title">

@@ -418,6 +418,19 @@ async def health_check() -> dict[str, Any]:
                     ready = False
         except Exception:
             logger.exception("Paddle health check failed")
+            # Keep the health payload schema stable when the optional Paddle
+            # runtime is unavailable (for example, on a CPU-only CI runner).
+            # Callers can still distinguish this degraded state through the
+            # top-level status and the explicit ``None`` diagnostics.
+            gpu.update(
+                {
+                    "device": None,
+                    "gpu_available": False,
+                    "cuda_compiled": None,
+                    "cudnn_compiled": None,
+                    "cudnn_runtime": None,
+                }
+            )
             issues.append("Paddle runtime is unavailable")
             ready = False
 

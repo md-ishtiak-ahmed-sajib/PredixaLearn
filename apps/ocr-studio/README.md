@@ -281,6 +281,17 @@ table/figure/equation handling, traceability, elapsed time, correction time,
 and AI-grounding rate. Publish no measurement without its fixture, permission,
 hardware, model versions, ground truth, and limitations.
 
+### Hackathon submission kit
+
+The judge-facing positioning, demo runbook, submission description, media
+checklist, and non-negotiable product boundaries are in
+[`docs/hackathon-submission.md`](docs/hackathon-submission.md). Use the
+15-case [`benchmarks/manifest.submission.template.json`](benchmarks/manifest.submission.template.json)
+only after adding permission-cleared papers and manually verified ground truth;
+the template does not represent a completed benchmark. Record genuine Codex
+history, reviewer decisions, and links to evidence in
+[`docs/hackathon-codex-evidence.md`](docs/hackathon-codex-evidence.md).
+
 ## Windows setup and local HTTPS
 
 Requirements are 64-bit Windows 11, Python 3.10–3.13 for development,

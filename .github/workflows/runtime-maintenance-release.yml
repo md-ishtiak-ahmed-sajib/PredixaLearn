@@ -4,18 +4,24 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Existing GitHub Release tag containing tested runtime artifacts
-        required: true
+        description: Optional override; leave blank to use PREDIXALEARN_MAINTENANCE_RELEASE_TAG
+        required: false
+        default: ""
         type: string
       minimum_app_version:
-        description: Minimum PredixaLearn version accepted by the runtime release
-        required: true
-        default: "1.1.0"
+        description: Optional override; leave blank to use PREDIXALEARN_MINIMUM_APP_VERSION
+        required: false
+        default: ""
         type: string
       components_file:
-        description: Reviewed component metadata file, relative to repository root
-        required: true
-        default: tooling/release/runtime-update-components.json
+        description: Optional override; leave blank to use PREDIXALEARN_COMPONENTS_FILE
+        required: false
+        default: ""
+        type: string
+      manifest_expiry_days:
+        description: Optional override; leave blank to use PREDIXALEARN_MANIFEST_EXPIRY_DAYS
+        required: false
+        default: ""
         type: string
 
 permissions:
@@ -25,6 +31,11 @@ jobs:
   validate-and-publish:
     runs-on: windows-latest
     timeout-minutes: 45
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag || vars.PREDIXALEARN_MAINTENANCE_RELEASE_TAG }}
+      MINIMUM_APP_VERSION: ${{ inputs.minimum_app_version || vars.PREDIXALEARN_MINIMUM_APP_VERSION }}
+      COMPONENTS_FILE: ${{ inputs.components_file || vars.PREDIXALEARN_COMPONENTS_FILE }}
+      MANIFEST_EXPIRY_DAYS: ${{ inputs.manifest_expiry_days || vars.PREDIXALEARN_MANIFEST_EXPIRY_DAYS }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -64,15 +75,62 @@ jobs:
         env:
           PREDIXALEARN_UPDATE_SIGNING_KEY: ${{ secrets.PREDIXALEARN_UPDATE_SIGNING_KEY }}
         run: |
-          if (-not (Test-Path "${{ inputs.components_file }}")) { throw "Reviewed component metadata is missing." }
+          foreach ($name in "RELEASE_TAG", "MINIMUM_APP_VERSION", "COMPONENTS_FILE", "MANIFEST_EXPIRY_DAYS") {
+            if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
+              throw "$name must be supplied as a workflow input or Actions repository variable."
+            }
+          }
+          if ($env:MANIFEST_EXPIRY_DAYS -notmatch "^(?:[1-9]|[1-8][0-9]|90)$") {
+            throw "MANIFEST_EXPIRY_DAYS must be an integer from 1 through 90."
+          }
+          if (-not (Test-Path $env:COMPONENTS_FILE)) { throw "Reviewed component metadata is missing." }
           python apps/ocr-studio/scripts/build_update_manifest.py `
-            --release-tag "${{ inputs.release_tag }}" `
-            --minimum-app-version "${{ inputs.minimum_app_version }}" `
-            --components "${{ inputs.components_file }}" `
+            --release-tag "$env:RELEASE_TAG" `
+            --minimum-app-version "$env:MINIMUM_APP_VERSION" `
+            --components "$env:COMPONENTS_FILE" `
             --output "release-manifest/predixalearn-update-manifest.json" `
-            --signature-output "release-manifest/predixalearn-update-manifest.json.sig"
-      - name: Publish signed manifest to the selected release
+            --signature-output "release-manifest/predixalearn-update-manifest.json.sig" `
+            --expires-days "$env:MANIFEST_EXPIRY_DAYS" `
+            --expected-public-key "apps/ocr-studio/app/maintenance/predixalearn-update-public.pem"
+      - name: Create the selected public Release when it is missing
+        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "${{ inputs.release_tag }}" release-manifest/predixalearn-update-manifest.json release-manifest/predixalearn-update-manifest.json.sig --clobber
+          $tag = $env:RELEASE_TAG
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag `
+              --title "PredixaLearn $tag" `
+              --notes "Signed maintenance-channel health bootstrap. This release intentionally contains no approved runtime updates."
+          }
+          $release = gh release view $tag --json isDraft,isPrerelease,tagName | ConvertFrom-Json
+          if ($release.isDraft -or $release.isPrerelease -or $release.tagName -ne $tag) {
+            throw "The selected maintenance Release must be published and non-prerelease."
+          }
+      - name: Publish signed manifest to the selected release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload $env:RELEASE_TAG release-manifest/predixalearn-update-manifest.json release-manifest/predixalearn-update-manifest.json.sig --clobber
+      - name: Verify the published public maintenance channel
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = $env:RELEASE_TAG
+          New-Item -ItemType Directory -Force -Path release-verification | Out-Null
+          gh release download $tag `
+            --pattern "predixalearn-update-manifest.json" `
+            --pattern "predixalearn-update-manifest.json.sig" `
+            --dir release-verification `
+            --clobber
+          python apps/ocr-studio/scripts/verify_update_manifest.py `
+            --manifest "release-verification/predixalearn-update-manifest.json" `
+            --signature "release-verification/predixalearn-update-manifest.json.sig" `
+            --public-key "apps/ocr-studio/app/maintenance/predixalearn-update-public.pem"
+          $release = gh release view $tag --json isDraft,isPrerelease | ConvertFrom-Json
+          if ($release.isDraft -or $release.isPrerelease) {
+            throw "Published maintenance verification requires a public, non-prerelease Release."
+          }

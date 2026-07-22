@@ -24,11 +24,13 @@ requires PostgreSQL, Redis, OIDC, HTTPS, Ed25519 worker signing, webhook
 signing, separate learner-identity encryption, and S3-compatible or Azure Blob
 storage.
 
-Production Python dependencies, including both object-storage adapters, are
-pinned with SHA-256 hashes in `requirements.lock`. Regenerate it only after
-tests and dependency review:
+Production Python dependencies, including both object-storage adapters and
+Linux-only `uvicorn[standard]` dependencies, are pinned with SHA-256 hashes in
+`requirements.lock`. Regenerate it only after tests and dependency review. Run
+the command from a Linux CPython environment (the production target), then
+commit the resulting lockfile:
 
-```powershell
+```bash
 pip-compile pyproject.toml --extra s3 --extra azure --generate-hashes --output-file requirements.lock
 ```
 
