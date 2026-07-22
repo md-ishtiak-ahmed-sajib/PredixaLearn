@@ -34,7 +34,7 @@ For the first public channel release, configure these non-sensitive **Actions va
 | `PREDIXALEARN_COMPONENTS_FILE` | `tooling/release/runtime-update-components.json` |
 | `PREDIXALEARN_MANIFEST_EXPIRY_DAYS` | `30` |
 
-Keep `PREDIXALEARN_UPDATE_SIGNING_KEY` as an **Actions secret**, never an Actions variable. The release workflow refuses to sign if that private PEM does not derive the committed `predixalearn-update-public.pem` key. Dispatching the workflow with these defaults creates or updates a published `v1.1.0` Release, uploads the detached manifest signature, downloads both assets again, and verifies them against the committed public key.
+Keep `PREDIXALEARN_UPDATE_SIGNING_KEY` as an **Actions secret**, never an Actions variable. The release workflow refuses to sign if that private PEM does not derive the committed `predixalearn-update-public.pem` key. When dispatching, leave the optional inputs blank to use these repository variables, or provide an explicit reviewed override. The workflow then creates or updates a published `v1.1.0` Release, uploads the detached manifest signature, downloads both assets again, and verifies them against the committed public key.
 
 `runtime-update-components.json` is intentionally empty for this bootstrap. It makes the local Maintenance dialog report an available signed channel with no approved runtime updates; it does not authorize any download or runtime change.
 
